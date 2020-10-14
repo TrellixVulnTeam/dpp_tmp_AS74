@@ -1,0 +1,20 @@
+
+#Apply via: ansible-playbook -i ./inventory.yaml --become stack_base_config.yaml
+
+#---------------------------------------------------------------
+
+- name: General OS Config 
+  hosts: all
+  tasks:
+    - name: Set Timezone
+      command: timedatectl set-timezone Europe/Berlin
+
+    #- name: upgrade all packages
+    #  yum: name=* state=latest
+
+    - name: Create hosts file from J2 Template
+      template:
+        src: ./conf_templates/hosts.template
+        dest: /etc/hosts
+  
+#---------------------------------------------------------------

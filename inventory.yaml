@@ -1,0 +1,30 @@
+all:
+  vars:
+    docker_src: "./src/docker_ce/pkg"
+    upload_target: "/tmp/inject"
+    dev_domain: "dpp.dev"
+    hostlist:
+      - ip: "192.168.10.181"
+        hostname: "dpp1"
+      - ip: "192.168.10.182"
+        hostname: "dpp2"
+      - ip: "192.168.10.183"
+        hostname: "dpp3"
+  hosts:
+    dpp1:
+      ansible_host: dpp1 
+    dpp2:
+      ansible_host: dpp2
+    dpp3:
+      ansible_host: dpp3
+    #dpp4:
+      #ansible_host: dpp4
+  children:
+    controller:
+      hosts: 
+        dpp1:
+    slaves:
+      hosts:
+        dpp2:
+        dpp3: 
+        #dpp4:  

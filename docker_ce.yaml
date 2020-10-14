@@ -1,0 +1,53 @@
+#Apply via: ansible-playbook -i ./inventory.yaml --become docker_ce.yaml
+
+#---------------------------------------------------------------
+
+- name: General OS Config 
+  hosts: all
+  tasks:
+    - name: copy docker ce src/rpm to target hosts
+      copy: 
+        src: "{{docker_src}}"
+        dest: "{{upload_target}}/docker"
+    
+
+    #---HIER KLAPPT WAS NOCH NICHT----------------------------------
+    #- name: Finding RPM files
+    #  find:
+    #    paths: "{{upload_target}}/docker/pkg"
+    #    patterns: "*.rpm"
+    #  register: rpm_result
+
+    #- name: Install docker ce from upladed src
+    #  no_log: true
+    #  yum: 
+    #    name: "{{ item.path }}"
+    #    state: absent
+    #    disablerepo: "*"
+    #    #disablerepo: "epel,ol7_latest"
+    #    #localinstall: true
+    #    skip_broken: true
+    # with_items: "{{ rpm_result.files }}"
+    
+
+    #---DAS IST DIE ALTERNATIVE (un-cool!!!)------------------------
+    - name: Check if docker is installed
+      stat:
+        path: /usr/bin/docker
+      register: stat_result
+    
+    - name: Install docker ce from upladed src
+      shell: rpm -Uvh *.rpm
+      args:
+        chdir: "{{upload_target}}/docker/pkg"
+        warn: false
+      when: not stat_result.stat.exists 
+
+    - name: Start docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+
+#---------------------------------------------------------------

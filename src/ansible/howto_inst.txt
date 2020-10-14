@@ -1,0 +1,60 @@
+
+--------------------------------------------------------------------
+All Hosts:
+
+useradd scm
+passwd scm
+usermod -aG wheel scm
+
+visudo: add line "scm ALL=(ALL) NOPASSWD: ALL"
+
+/etc/ssh/sshd_config
+ -> PasswordAuthentication no
+
+-------------------------------
+
+Controller:
+
+ssh-keygen 
+ -> /home/scm/.ssh/id_rsa
+ -> no password
+
+cat /home/scm/.ssh/id_rsa.pub > /home/scm/.ssh/authorized_keys
+chmod 600 /home/scm/.ssh/authorized_keys
+
+su scm 
+ssh-copy-id scm@dpp2 
+ssh-copy-id scm@dpp3
+
+--------------------------------------------------------------------
+
+
+Install Ansible on Controller:
+
+Use CenOS 7 VM with internet connection
+mkdir /tmp/dpp_ansible/inst
+yum install --downloadonly --downloaddir=/tmp/dpp_ansible/inst sshpass python2-cryptography python-paramiko python-jinja2 PyYAML
+curl https://releases.ansible.com/ansible/rpm/release/epel-7-x86_64/ansible-2.9.9-1.el7.ans.noarch.rpm --output ansible-2.9.9.rpm
+
+copy content of /tmp/dpp_ansible to controller
+
+rpm -Uvh *.rpm
+
+#rpm -ivh sshpass-1.06-2.el7.x86_64.rpm
+#rpm -ivh python-ply-3.4-11.el7.noarch.rpm
+#rpm -ivh python-pycparser-2.14-1.el7.noarch.rpm
+#rpm -ivh python-cffi-1.6.0-5.el7.x86_64.rpm
+#rpm -ivh python-enum34-1.0.4-1.el7.noarch.rpm
+#rpm -ivh python-idna-2.4-1.el7.noarch.rpm
+#rpm -ivh python2-pyasn1-0.1.9-7.el7.noarch.rpm
+#rpm -ivh python2-cryptography-1.7.2-2.el7.x86_64.rpm
+#rpm -ivh python-paramiko-2.1.1-9.el7.noarch.rpm
+#rpm -ivh python-babel-0.9.6-8.el7.noarch.rpm
+#rpm -ivh python-markupsafe-0.11-10.el7.x86_64.rpm
+#rpm -ivh libyaml-0.1.4-11.el7_0.x86_64.rpm
+#rpm -ivh python-jinja2-2.7.2-4.el7.noarch.rpm
+#rpm -ivh PyYAML-3.10-11.el7.x86_64.rpm
+#rpm -ivh ansible-2.9.9-1.el7.ans.noarch.rpm
+
+
+
