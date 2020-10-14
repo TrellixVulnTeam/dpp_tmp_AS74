@@ -3,7 +3,7 @@
 #---------------------------------------------------------------
 
 - name: General OS Config 
-  hosts: all
+  hosts: slaves
   tasks:
     - name: copy docker ce src/rpm to target hosts
       copy: 
