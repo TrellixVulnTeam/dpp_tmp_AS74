@@ -5,9 +5,14 @@
 - name: General OS Config 
   hosts: slaves
   tasks:
+
+    #- name: Loop Check Test
+    #  ansible.builtin.debug:
+    #    msg: "{{docker_src}}_{{hostlist[inventory_hostname].0.os}}/pkg"
+
     - name: copy docker ce src/rpm to target hosts
       copy: 
-        src: "{{docker_src}}"
+        src: "{{docker_src}}_{{hostlist[inventory_hostname].0.os}}/pkg"
         dest: "{{upload_target}}/docker"
     
 
@@ -48,6 +53,5 @@
         name: docker
         state: started
         enabled: true
-
 
 #---------------------------------------------------------------

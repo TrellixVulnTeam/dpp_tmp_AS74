@@ -1,6 +1,6 @@
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 
-{% for host in hostlist %}
-{{host.ip}} {{host.hostname}}.{{dev_domain}} {{host.hostname}}
+{% for key, obj in hostlist.items() %}
+{{obj.0.ip}} {{obj.0.hostname}}.{{dev_domain}} {{obj.0.hostname}}
 {% endfor %}

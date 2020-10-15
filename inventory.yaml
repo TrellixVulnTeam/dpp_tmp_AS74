@@ -1,15 +1,25 @@
 all:
   vars:
-    docker_src: "./src/docker_ce_el7/pkg"
+    docker_src: "./src/docker_ce"
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
     hostlist:
-      - ip: "192.168.10.181"
-        hostname: "dpp1"
-      - ip: "192.168.10.182"
-        hostname: "dpp2"
-      - ip: "192.168.10.183"
-        hostname: "dpp3"
+      dpp1:
+        - ip: "192.168.10.181"
+          hostname: "dpp1"
+          os: "el7"
+      dpp2:
+        - ip: "192.168.10.182"
+          hostname: "dpp2"
+          os: "el7"
+      dpp3:
+        - ip: "192.168.10.183"
+          hostname: "dpp3"
+          os: "el7"
+      dpp8:
+        - ip: "192.168.10.188"
+          hostname: "dpp8"
+          os: "el8"
   hosts:
     dpp1:
       ansible_host: dpp1 
@@ -17,8 +27,8 @@ all:
       ansible_host: dpp2
     dpp3:
       ansible_host: dpp3
-    #dpp4:
-      #ansible_host: dpp4
+    dpp8:
+      ansible_host: dpp8
   children:
     controller:
       hosts: 
@@ -27,4 +37,4 @@ all:
       hosts:
         dpp2:
         dpp3: 
-        #dpp4:  
+        dpp8:  
