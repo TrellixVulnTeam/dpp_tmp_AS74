@@ -1,0 +1,15 @@
+
+--------------------------------------------------------------------
+
+Install Docker CE from local source
+
+Use CenOS 8 or Rhel 8 AWS VM with internet connection
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+mkdir /tmp/docker_el8
+sudo yum install -y --downloadonly --downloaddir=/tmp/docker_el8 docker-ce docker-ce-cli containerd.io
+
+copy content of /tmp/docker_el8 to controller
+
+sudo yum localinstall -y --disablerepo=* docker_el8/*.rpm   
