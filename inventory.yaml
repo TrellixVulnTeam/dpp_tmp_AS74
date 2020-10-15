@@ -1,6 +1,6 @@
 all:
   vars:
-    docker_src: "./src/docker_ce/pkg"
+    docker_src: "./src/docker_ce_el7/pkg"
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
     hostlist:
