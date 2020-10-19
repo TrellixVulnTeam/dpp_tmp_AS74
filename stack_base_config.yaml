@@ -4,7 +4,7 @@
 #---------------------------------------------------------------
 
 - name: General OS Config 
-  hosts: all
+  hosts: stack
   tasks:
     - name: Set Timezone
       command: timedatectl set-timezone Europe/Berlin
@@ -16,5 +16,16 @@
       template:
         src: ./conf_templates/hosts.template
         dest: /etc/hosts
+
+    - name: Disallow ssh password authentication
+      lineinfile: dest=/etc/ssh/sshd_config
+        regexp="^PasswordAuthentication"
+        line="PasswordAuthentication no"
+        state=present
+
+    - name: Restart ssh server
+      service: 
+        name: sshd
+        state: restarted
   
 #---------------------------------------------------------------
