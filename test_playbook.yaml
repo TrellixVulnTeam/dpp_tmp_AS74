@@ -1,0 +1,7 @@
+- name: General OS Config 
+  hosts: mgmt1
+  tasks:
+    - name: Test local yum rpm repo
+      yum:
+        name: nano
+        state: present

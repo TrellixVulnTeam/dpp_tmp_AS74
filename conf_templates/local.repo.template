@@ -1,0 +1,21 @@
+[epel8]
+name=Epel 8
+
+baseurl=http://{{hostlist.controller.ip}}/repos/epel8_repo/x86_64/
+#baseurl=file:///mnt/repos/epel8_repo/x86_64/
+
+enabled=1
+gpgcheck=0
+
+
+[centos8baseos]
+name=CentOS BaseOS
+baseurl=http://{{hostlist.controller.ip}}/repos/centos8_repo/BaseOS/x86_64/os/
+enabled=1
+gpgcheck=0
+
+[centos8appstream]
+name=CentOS AppStream
+baseurl=http://{{hostlist.controller.ip}}/repos/centos8_repo/AppStream/x86_64/os/
+enabled=1
+gpgcheck=0

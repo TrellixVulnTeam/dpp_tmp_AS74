@@ -27,5 +27,15 @@
       service: 
         name: sshd
         state: restarted
+
+    - name: Copy local yum repo config template and move existing conf files
+      block:
+        - file:
+            path: "/home/{{ansible_usr}}/bu"
+            state: directory
+        - shell: "mv /etc/yum.repos.d/*.repo /home/{{ansible_usr}}/bu/"
+        - template: 
+            src: "./conf_templates/local.repo.template"
+            dest: "/etc/yum.repos.d/local.repo"
   
 #---------------------------------------------------------------

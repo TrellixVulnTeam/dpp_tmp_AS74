@@ -1,29 +1,39 @@
 all:
   vars:
-    docker_src: "./src/docker_ce"
+    ansible_usr: "scm"
+    docker_ce_src: "./src/docker_ce"
+    docker_ee_src: "/mnt/repos/docker_ee"
+    docker_ee_rpms: 
+      - docker-ee-cli-19.03.12-3.el8.x86_64.rpm
+      - containerd.io-1.3.4-3.1.el8.x86_64.rpm
+      - docker-ee-19.03.12-3.el8.x86_64.rpm
+    docker_ee_pkgs: 
+      - docker-ee-cli
+      - docker-ee
+      - containerd.io
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
     hostlist:
       controller:
-        - ip: "10.10.10.10"
-          hostname: "controller"
-          os: "el8"
+        ip: "10.10.10.10"
+        hostname: "controller"
+        os: "el8"
       mgmt1:
-        - ip: "10.10.10.21"
-          hostname: "mgmt1"
-          os: "el8"
-      mgmt1:
-        - ip: "10.10.10.22"
-          hostname: "mgmt2"
-          os: "el8"
+        ip: "10.10.10.21"
+        hostname: "mgmt1"
+        os: "el8"
+      mgmt2:
+        ip: "10.10.10.22"
+        hostname: "mgmt2"
+        os: "el8"
       wrk1:
-        - ip: "10.10.10.31"
-          hostname: "wrk1"
-          os: "el8"
-      wrk1:
-        - ip: "10.10.10.32"
-          hostname: "wrk2"
-          os: "el8"
+        ip: "10.10.10.31"
+        hostname: "wrk1"
+        os: "el8"
+      wrk2:
+        ip: "10.10.10.32"
+        hostname: "wrk2"
+        os: "el8"
   hosts:
     controller:
       ansible_host: controller 
@@ -36,7 +46,7 @@ all:
     wrk2:
       ansible_host: wrk2
   children:
-    controller:
+    controllers:
       hosts: 
         controller:
     mgmt:
