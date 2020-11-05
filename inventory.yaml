@@ -3,6 +3,7 @@ all:
     ansible_usr: "scm"
     docker_ce_src: "./src/docker_ce"
     docker_ee_src: "/mnt/repos/docker_ee"
+    docker_img_src: "/mnt/repos/docker_images"
     docker_ee_rpms: 
       - docker-ee-cli-19.03.5-3.el8.x86_64.rpm
       - containerd.io-1.2.10-3.2.el8.x86_64.rpm

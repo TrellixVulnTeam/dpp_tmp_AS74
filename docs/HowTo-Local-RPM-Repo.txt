@@ -1,4 +1,5 @@
-How to setup a local RPM/YUM Repo without internet connection on target server
+
+#--- How to setup a local RPM/YUM Repo without internet connection on target server #-------------------
 
 1. Get full BaseOS and AppStream repo data (PC with internet connection and filezilla) 
    e.g. from: 
@@ -35,7 +36,15 @@ How to setup a local RPM/YUM Repo without internet connection on target server
 
 
 
-How to provide local RPM/YUM Repo via http serve (nginx) to other local machines
+#--- How to initialize own RPM Repo: #------------------------------------------------------------------
+
+1. Copy your RPM package files to a local path (e.g. all docker rpms to /var/repos/docker_ee )
+2. install createrepo via yum: "sudo yum install -y createrepo"
+3. Initialize and index the new repo: "sudo createrepo /var/repos/docker_ee"
+
+
+
+#--- How to provide local RPM/YUM Repo via http serve (nginx) to other local machines #-----------------
 
 1. Install nginx on local repo server:
    - sudo yum install -y nginx

@@ -44,14 +44,23 @@
 #---------------------------------------------------------------
 
 - name: Create Test Service (nginx on expose port 8080)
-  hosts: swarm_init
+  hosts: stack
   vars_prompt:
     - name: test_service
       prompt: "Create a test service? (yes/no)"
       private: no
   tasks:
-    - name: "Test-Service"
-      shell: "docker service create --name my_web --replicas 3 --publish 8080:80 nginx"
+    - block:
+      - copy:
+          src: "{{docker_img_src}}/container_nginx.tar"
+          dest: "{{upload_target}}/container_nginx.tar"
+      - shell: "docker load < {{upload_target}}/container_nginx.tar"
+      - shell: "docker service ls"
+        register: srv_list
+        when: inventory_hostname == swarm_init
+      - name: "Test-Service"
+        shell: "docker service create --name my_web --replicas 3 --replicas-max-per-node 1 --publish 8080:80 nginx"
+        when: inventory_hostname == swarm_init and 'my_web' not in srv_list.stdout 
       when: test_service == 'yes'
 
 #---------------------------------------------------------------

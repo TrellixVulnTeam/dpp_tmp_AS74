@@ -19,3 +19,9 @@ name=CentOS AppStream
 baseurl=http://{{hostlist.controller.ip}}/repos/centos8_repo/AppStream/x86_64/os/
 enabled=1
 gpgcheck=0
+
+[dockeree]
+name=Docker Enterprise Edition
+baseurl=http://{{hostlist.controller.ip}}/repos/docker_ee
+enabled=1
+gpgcheck=0
