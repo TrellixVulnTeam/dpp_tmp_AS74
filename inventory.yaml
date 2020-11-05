@@ -1,40 +1,72 @@
 all:
   vars:
-    docker_src: "./src/docker_ce"
+    ansible_usr: "scm"
+    docker_ce_src: "./src/docker_ce"
+    docker_ee_src: "/mnt/repos/docker_ee"
+    docker_img_src: "/mnt/repos/docker_images"
+    docker_ee_rpms: 
+      - docker-ee-cli-19.03.5-3.el8.x86_64.rpm
+      - containerd.io-1.2.10-3.2.el8.x86_64.rpm
+      - docker-ee-19.03.5-3.el8.x86_64.rpm
+    docker_ee_pkgs: 
+      - docker-ee-cli
+      - docker-ee
+      - containerd.io
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
+    swarm_init: mgmt1 # Achtung is doppelt
+    swarm_port: "2377"
     hostlist:
-      dpp1:
-        - ip: "192.168.10.181"
-          hostname: "dpp1"
-          os: "el7"
-      dpp2:
-        - ip: "192.168.10.182"
-          hostname: "dpp2"
-          os: "el7"
-      dpp3:
-        - ip: "192.168.10.183"
-          hostname: "dpp3"
-          os: "el7"
-      dpp8:
-        - ip: "192.168.10.188"
-          hostname: "dpp8"
-          os: "el8"
+      controller:
+        ip: "10.10.10.10"
+        hostname: "controller"
+        os: "el8"
+      mgmt1:
+        ip: "10.10.10.21"
+        hostname: "mgmt1"
+        os: "el8"
+      mgmt2:
+        ip: "10.10.10.22"
+        hostname: "mgmt2"
+        os: "el8"
+      wrk1:
+        ip: "10.10.10.31"
+        hostname: "wrk1"
+        os: "el8"
+      wrk2:
+        ip: "10.10.10.32"
+        hostname: "wrk2"
+        os: "el8"
   hosts:
-    dpp1:
-      ansible_host: dpp1 
-    dpp2:
-      ansible_host: dpp2
-    dpp3:
-      ansible_host: dpp3
-    dpp8:
-      ansible_host: dpp8
-  children:
     controller:
+      ansible_host: controller 
+    mgmt1:
+      ansible_host: mgmt1
+    mgmt2:
+      ansible_host: mgmt2
+    wrk1:
+      ansible_host: wrk1
+    wrk2:
+      ansible_host: wrk2
+  children:
+    controllers:
       hosts: 
-        dpp1:
-    slaves:
+        controller:
+    mgmt:
       hosts:
-        dpp2:
-        dpp3: 
-        dpp8:  
+        mgmt1:
+        mgmt2: 
+    wrk:
+      hosts:
+        wrk1:
+        wrk2:
+    stack:
+      hosts:
+        mgmt1:
+        mgmt2:
+        wrk1:
+        wrk2:
+    swarm_init:
+      hosts:
+        mgmt1: # Achtung is doppelt
+        

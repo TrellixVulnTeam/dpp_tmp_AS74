@@ -1,0 +1,66 @@
+
+#Apply via: ansible-playbook -i ./inventory.yaml --become docker-install.yaml
+
+#---------------------------------------------------------------
+
+- name: Configure Docker Swarm
+  hosts: swarm_init
+  tasks:
+    - name: "Check if Swarm needs to be initialized"
+      shell: docker info | grep "Swarm"
+      register: result
+    
+    - name: "Swarm initialization on {{hosts.childrean.swarm_init}}"
+      shell: "docker swarm init"
+      when: "'inactive' in result.stdout"
+
+#-----------------------------------------
+
+    - name: "Get Join tokens"
+      block:
+        - shell: "docker swarm join-token manager -q"
+          register: join_token_manager
+        - shell: "docker swarm join-token worker -q"
+          register: join_token_worker
+        - shell: "docker node ls"
+          register: node_list
+        #- debug:
+        #    msg: "Manager: {{join_token_manager.stdout}}  - Worker: {{join_token_worker.stdout}}"
+
+#---------------------------------------------------------------
+    
+- name: "Join Workers if needed"
+  hosts: wrk
+  tasks:
+    - shell: "docker swarm join --token {{hostvars[swarm_init]['join_token_worker']['stdout']}} {{swarm_init}}.{{dev_domain}}:{{swarm_port}}"
+      when: inventory_hostname not in hostvars[swarm_init]['node_list']['stdout'] 
+
+- name: "Join Managers if needed"
+  hosts: mgmt
+  tasks:
+    - shell: "docker swarm join --token {{hostvars[swarm_init]['join_token_manager']['stdout']}} {{swarm_init}}.{{dev_domain}}:{{swarm_port}}"
+      when: inventory_hostname not in hostvars[swarm_init]['node_list']['stdout']
+
+#---------------------------------------------------------------
+
+- name: Create Test Service (nginx on expose port 8080)
+  hosts: stack
+  vars_prompt:
+    - name: test_service
+      prompt: "Create a test service? (yes/no)"
+      private: no
+  tasks:
+    - block:
+      - copy:
+          src: "{{docker_img_src}}/container_nginx.tar"
+          dest: "{{upload_target}}/container_nginx.tar"
+      - shell: "docker load < {{upload_target}}/container_nginx.tar"
+      - shell: "docker service ls"
+        register: srv_list
+        when: inventory_hostname == swarm_init
+      - name: "Test-Service"
+        shell: "docker service create --name my_web --replicas 3 --replicas-max-per-node 1 --publish 8080:80 nginx"
+        when: inventory_hostname == swarm_init and 'my_web' not in srv_list.stdout 
+      when: test_service == 'yes'
+
+#---------------------------------------------------------------

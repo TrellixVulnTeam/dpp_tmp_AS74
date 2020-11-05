@@ -2,5 +2,5 @@
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 
 {% for key, obj in hostlist.items() %}
-{{obj.0.ip}} {{obj.0.hostname}}.{{dev_domain}} {{obj.0.hostname}}
+{{obj.ip}} {{obj.hostname}}.{{dev_domain}} {{obj.hostname}}
 {% endfor %}

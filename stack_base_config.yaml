@@ -4,7 +4,7 @@
 #---------------------------------------------------------------
 
 - name: General OS Config 
-  hosts: all
+  hosts: stack
   tasks:
     - name: Set Timezone
       command: timedatectl set-timezone Europe/Berlin
@@ -12,9 +12,34 @@
     #- name: upgrade all packages
     #  yum: name=* state=latest
 
+    - name: Set local hostnames
+      hostname:
+        name: "{{inventory_hostname}}"
+
     - name: Create hosts file from J2 Template
       template:
         src: ./conf_templates/hosts.template
         dest: /etc/hosts
+
+    - name: Disallow ssh password authentication
+      lineinfile: dest=/etc/ssh/sshd_config
+        regexp="^PasswordAuthentication"
+        line="PasswordAuthentication no"
+        state=present
+
+    - name: Restart ssh server
+      service: 
+        name: sshd
+        state: restarted
+
+    - name: Copy local yum repo config template and move existing conf files
+      block:
+        - file:
+            path: "/home/{{ansible_usr}}/bu"
+            state: directory
+        - shell: "mv /etc/yum.repos.d/*.repo /home/{{ansible_usr}}/bu/"
+        - template: 
+            src: "./conf_templates/local.repo.template"
+            dest: "/etc/yum.repos.d/local.repo"
   
 #---------------------------------------------------------------

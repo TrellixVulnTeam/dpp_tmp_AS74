@@ -1,0 +1,12 @@
+Source: https://docs.mirantis.com/docker-enterprise/v3.0/dockeree-products/ucp/admin/install-ucp.html#step-by-step-ucp-installation
+
+# Pull the latest version of UCP
+docker image pull docker/ucp:3.2.5
+
+# Install UCP
+docker container run --rm -it --name ucp \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  docker/ucp:3.2.5 install \
+  --host-address <node-ip-address> \
+  --interactive
+
