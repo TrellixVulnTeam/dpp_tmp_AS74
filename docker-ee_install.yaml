@@ -3,31 +3,27 @@
 #---------------------------------------------------------------
 
 - name: General OS Config 
-  hosts: mgmt
+  hosts: stack
   tasks:
-
-    #- name: Loop Check Test
-    #  ansible.builtin.debug:
-    #    msg: "{{docker_ce_src}}_{{hostlist[inventory_hostname].0.os}}/pkg"
-
     - name: copy docker ee src/rpm to target hosts
       copy: 
         src: "{{docker_ee_src}}/"
         dest: "{{upload_target}}/docker"
     
+#------------------------------------------
 
-    #- name: Install docker ee from upladed src
-    #  yum: 
-    #    name: "{{upload_target}}/docker/{{item}}"
-    #    state: present
-    #    disable_gpg_check: yes
-    #  loop: "{{docker_ee_rpms}}"
-
-    - name: Un-Install docker ee 
+    - name: Install docker ee from upladed src
       yum: 
-        name: "{{item}}"
-        state: absent
-        autoremove: yes
-      loop: "{{docker_ee_pkgs}}"
+        name: "{{upload_target}}/docker/{{item}}"
+        state: present
+        disable_gpg_check: yes
+      loop: "{{docker_ee_rpms}}"
+
+    #- name: Un-Install docker ee 
+    #  yum: 
+    #    name: "{{item}}"
+    #    state: absent
+    #    autoremove: yes
+    #  loop: "{{docker_ee_pkgs}}"
   
 #---------------------------------------------------------------
