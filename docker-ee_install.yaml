@@ -18,12 +18,11 @@
         state: present
         disable_gpg_check: yes
       loop: "{{docker_ee_rpms}}"
-
-    #- name: Un-Install docker ee 
-    #  yum: 
-    #    name: "{{item}}"
-    #    state: absent
-    #    autoremove: yes
-    #  loop: "{{docker_ee_pkgs}}"
+    
+    - name: Enable and start docker ee
+      service:
+        name: docker
+        state: started
+        enabled: yes
   
 #---------------------------------------------------------------

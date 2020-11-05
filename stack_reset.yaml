@@ -1,0 +1,34 @@
+
+#Apply via: ansible-playbook -i ./inventory.yaml --become stack_reset.yaml
+
+#---------------------------------------------------------------
+
+- name: Reset Stack Config 
+  hosts: stack
+  vars_prompt:
+    - name: swarm_reset
+      prompt: "Reset docker swarm? (yes/no)"
+      private: no
+    - name: docker_reset
+      prompt: "Uninstall docker? (yes/no)"
+      private: no
+  
+  tasks:
+    - name: "Check if Swarm is initialized"
+      shell: docker info | grep "Swarm"
+      register: result
+    
+    - name: "Destroy swarm config "
+      shell: docker swarm leave --force
+      when: "'inactive' not in result.stdout and swarm_reset == 'yes'"
+
+    - name: Un-Install docker ee 
+      yum: 
+        name: "{{item}}"
+        state: absent
+        autoremove: yes
+      loop: "{{docker_ee_pkgs}}"
+      when: docker_reset == 'yes'
+ 
+  
+#---------------------------------------------------------------

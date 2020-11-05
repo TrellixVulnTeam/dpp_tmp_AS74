@@ -13,6 +13,8 @@ all:
       - containerd.io
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
+    swarm_init: mgmt1 # Achtung is doppelt
+    swarm_port: "2377"
     hostlist:
       controller:
         ip: "10.10.10.10"
@@ -65,5 +67,5 @@ all:
         wrk2:
     swarm_init:
       hosts:
-        mgmt1:
+        mgmt1: # Achtung is doppelt
         

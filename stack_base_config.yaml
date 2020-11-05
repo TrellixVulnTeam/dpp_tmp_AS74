@@ -12,6 +12,10 @@
     #- name: upgrade all packages
     #  yum: name=* state=latest
 
+    - name: Set local hostnames
+      hostname:
+        name: "{{inventory_hostname}}"
+
     - name: Create hosts file from J2 Template
       template:
         src: ./conf_templates/hosts.template

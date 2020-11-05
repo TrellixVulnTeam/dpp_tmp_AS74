@@ -39,7 +39,7 @@
   hosts: mgmt
   tasks:
     - shell: "docker swarm join --token {{hostvars[swarm_init]['join_token_manager']['stdout']}} {{swarm_init}}.{{dev_domain}}:{{swarm_port}}"
-      when: inventory_hostname not in hostvars[swarm_init]['node_list']['stdout'] 
+      when: inventory_hostname not in hostvars[swarm_init]['node_list']['stdout']
 
 #---------------------------------------------------------------
 
