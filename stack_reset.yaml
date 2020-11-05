@@ -14,25 +14,31 @@
       private: no
   
   tasks:
-    - name: "Check if Swarm is initialized"
-      shell: docker info | grep "Swarm"
-      register: result
-    
-    - name: "Delete all services"
-      shell: docker service rm $(docker service ls -q)
-      when: "'inactive' not in result.stdout and swarm_reset == 'yes' and inventory_hostname == swarm_init"
+    - name: Gather the package facts
+      package_facts:
+        manager: auto
+    - block:
+      - name: "Check if Swarm is initialized"
+        shell: docker info | grep "Swarm"
+        register: result
+      
+      - name: "Delete all services"
+        shell: docker service rm $(docker service ls -q)
+        when: "'inactive' not in result.stdout and swarm_reset == 'yes' and inventory_hostname == swarm_init"
 
-    - name: "Destroy swarm config "
-      shell: docker swarm leave --force
-      when: "'inactive' not in result.stdout and swarm_reset == 'yes'"
+      - name: "Destroy swarm config "
+        shell: docker swarm leave --force
+        when: "'inactive' not in result.stdout and swarm_reset == 'yes'"
 
-    - name: Un-Install docker ee 
-      yum: 
-        name: "{{item}}"
-        state: absent
-        autoremove: yes
-      loop: "{{docker_ee_pkgs}}"
-      when: docker_reset == 'yes'
+      - name: Un-Install docker ee 
+        yum: 
+          name: "{{item}}"
+          state: absent
+          autoremove: yes
+        loop: "{{docker_ee_pkgs}}"
+        when: docker_reset == 'yes'
+      
+      when: "'docker-ee' in ansible_facts.packages"
  
   
 #---------------------------------------------------------------

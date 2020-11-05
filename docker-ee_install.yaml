@@ -5,20 +5,31 @@
 - name: General OS Config 
   hosts: stack
   tasks:
-    - name: copy docker ee src/rpm to target hosts
-      copy: 
-        src: "{{docker_ee_src}}/"
-        dest: "{{upload_target}}/docker"
+
+#------------------------------------------
+    # - name: copy docker ee src/rpm to target hosts
+    #   copy: 
+    #     src: "{{docker_ee_src}}/"
+    #     dest: "{{upload_target}}/docker"
     
+    # - name: Install docker ee from upladed src
+    #   yum: 
+    #     name: "{{upload_target}}/docker/{{item}}"
+    #     state: present
+    #     disable_gpg_check: yes
+    #   loop: "{{docker_ee_rpms}}"
+
+#------------------------------------------
+    - name: Install docker ee from local repo
+      yum:
+        name:
+          - docker-ee
+          - docker-ee-cli
+          - containerd.io
+        state: present
+
 #------------------------------------------
 
-    - name: Install docker ee from upladed src
-      yum: 
-        name: "{{upload_target}}/docker/{{item}}"
-        state: present
-        disable_gpg_check: yes
-      loop: "{{docker_ee_rpms}}"
-    
     - name: Enable and start docker ee
       service:
         name: docker
