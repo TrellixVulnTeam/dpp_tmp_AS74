@@ -3,9 +3,61 @@
 
 #---------------------------------------------------------------
 
+# - name: Create empty array
+#   tasks:
+#     set_fact:
+#       reachable: []
+
+# - name: Check host connectivity
+#   hosts: stack
+#   gather_facts: no
+#   vars:
+#     no_ssh: []
+  
+#   tasks:
+#     - meta: clear_host_errors
+#     - command: ping -c1 {{ inventory_hostname }}
+#       delegate_to: localhost
+#       register: ping_result
+#       ignore_errors: yes
+
+#     - debug: var=inventory_hostname
+#       when: ping_result.failed
+
+#     - set_fact: 
+#         no_ssh: "{{no_ssh + [inventory_hostname]}}"
+#       when: ping_result.failed
+
+#     - debug: var=no_ssh
+    # - set_fact:
+    #     ansible_factsreachable: "{{reachable + [inventory_hostname]}}"
+    #   when: ping_result.failed == True
+    # - debug: var=reachable
+    
 - name: General OS Config 
   hosts: stack
+  gather_facts: yes
+  vars_prompt:
+    - name: firewall_disable
+      prompt: "Disable software firewall on all stack hosts? (yes/no)"
+      private: no
+      default: 'no'
+
   tasks:
+    #- name: Check host connectivity
+    #  shell: ssh {{ansible_usr}}@{{ inventory_hostname }} "echo 'success'"
+    #  register: scm_enabled 
+    #- debug: 
+    #    msg: "{{ ansible_facts.nodename }}"
+
+    - name: Stop and disable firewalld.
+      service:
+        name: firewalld
+        state: stopped
+        enabled: False
+      ignore_errors: yes
+      when: firewall_disable == 'yes'
+
     - name: Set Timezone
       command: timedatectl set-timezone Europe/Berlin
 
