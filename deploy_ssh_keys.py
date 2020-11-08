@@ -2,33 +2,107 @@
 
 #-Import needed modules-------------------------------------
 import os, sys
+import string
 import getpass
 import socket
 from errno import ECONNREFUSED
+import string
+import argparse
 
-try:
-  import paramiko
-except:
-  exit('Paramiko Client module for ptyhon3 is needed. Please install it first.')
+try: import paramiko
+except: exit('Paramiko Client module for ptyhon3 is needed. Please install it first.')
+
+# try: import inquirer
+# except: exit('Inquirer module for ptyhon3 is needed. Please install it first.')
+
 
 #-Set globals-----------------------------------------------
 CurPath = os.path.dirname(os.path.realpath(__file__))
 
+
+#-Build the ArgParser---------------------------------------
+
+def build_arg_parse():
+  AppParser = argparse.ArgumentParser()
+
+  AppParser.add_argument("--target-hosts", type=str, required=True,
+    help="Required: Set target hosts. multiple hosts separated by comma.")
+
+  AppParser.add_argument("--public-key", type=str, required=True,
+    help="Required: Set path to public key file to deploy.")
+
+  AppParser.add_argument("--deploy-user", type=str, required=True,
+    help="Required: Set user name for deployment.")
+
+  AppParser.add_argument("--target-user", type=str, 
+    help="Optional: Set user name for target user. Else same user name as deploy user will be used.")
+
+  ArgGroup = AppParser.add_mutually_exclusive_group(required=True)
+  ArgGroup.add_argument("--deploy-password", type=str, 
+    help="Choice (password or key): Set password for deployment.")
+
+  ArgGroup.add_argument("--deploy-key", type=str, 
+    help="Choice (key or password): Set path to privat key for deployment.")
+
+  args = AppParser.parse_args()
+  print(args)
+
+
+
 #-SSH deployer Class----------------------------------------
 class ssh_deploy:
-  sshHost = str
-  sshUsr = str
-  sshPwd = str
-  sshKey = str
-  pubKey = str
+
+  #-Fixed Class Vars------------------------------- 
+
+  sshTargetHosts = []
+  sshTargetUsr = str
+  sshDeployPwd = str
+  sshDeployUsr = str
+  sshDeployKey = str
+  pubKeyPath = str
+  paraList = [
+    { 
+      'name': 'sshTargetHosts',
+      'description': 'ssh target host:      ',
+    },
+    { 
+      'name': 'sshTargetUsr',
+      'description': 'ssh target user:      ',
+    },
+    { 
+      'name': 'sshDeployPwd',
+      'description': 'ssh deploy password:  ',
+    },
+    { 
+      'name': 'sshDeployUsr',
+      'description': 'ssh deploy user:       ',
+    },
+    { 
+      'name': 'sshDeployKey',
+      'description': 'ssh deploy key:       ',
+    },
+    { 
+      'name': 'pubKeyPath',
+      'description': 'path to public key file to deploy: ',
+    }
+  ]
 
   #-Initializer------------------------------------
   def __init__(self):
-    print('- New ssh deploy object created')
+    print('*New ssh deploy object created')
 
   #-Helpers----------------------------------------
+  def has_special_chars(self, strIn):
+    specialChars = string.punctuation
+    bools = list(map(lambda char: char in specialChars, strIn))
+    if any(bools):
+      return True 
+    else:
+      return False
+
+  #--------------------------------
   def try_usr_std_path(self):
-    stdPath = '/home/'+str(self.sshUsr)+'/.ssh/id_rsa.pub' 
+    stdPath = '/home/'+str(self.sshDeployUsr)+'/.ssh/id_rsa.pub' 
     if os.path.isfile(stdPath):
       try: 
         readChk = open(stdPath, 'r')
@@ -41,14 +115,16 @@ class ssh_deploy:
   #--------------------------------
   def check_deploy_ready(self):
     chk = []
-    if self.sshHost == str:
-      chk.append('ssh host')
-    if self.sshUsr == str:
-      chk.append('ssh user')
-    if self.pubKey == str:
+    if len(self.sshTargetHosts) == 0:
+      chk.append('ssh target hosts')
+    if type(self.sshTargetUsr) == type:
+      chk.append('ssh target user')
+    if type(self.sshDeployUsr) == type:
+      chk.append('ssh deploy user')
+    if type(self.pubKeyPath) == type:
       chk.append('public key')
-    if self.sshPwd == str and self.sshKey == str:
-      chk.append('ssh password or ssh key')
+    if  type(self.sshDeployPwd) == type and type(self.sshDeployKey) == type:
+      chk.append('ssh deploy password or ssh deploy key')
     
     return chk
   
@@ -68,7 +144,7 @@ class ssh_deploy:
 
   #-Main Methodes----------------------------------
 
-  def set_ssh_host(self, curHost=False):
+  def set_ssh_target_host(self, curHost=False):
     if type(curHost) is not str:
       print('- SSH host not set or in wrong format.', "\n  Try String" )
       return
@@ -77,17 +153,29 @@ class ssh_deploy:
       print('- SSH host not reachable' )
       return
     else:
-      self.sshHost = curHost
+      self.sshTargetHosts.append(curHost)
 
   #------------------------------------
-  def set_ssh_user(self, usr=False):
+  def set_ssh_deploy_user(self, usr=False):
+    #if type(usr) is str and not self.has_special_chars(usr):
     if type(usr) is str:
-      self.sshUsr = usr.replace(' ', '')
+      self.sshDeployUsr = usr.replace(' ', '')
+      self.sshTargetUsr = usr.replace(' ', '')
     else:
       curUsr = getpass.getuser()
       print('- Username not defined or in wrong format.', "\n  Proceed with current user: "+curUsr )
-      self.sshUsr = curUsr
+      self.sshDeployUsr = curUsr
+      self.sshTargetUsr = curUsr
   
+  #------------------------------------
+  def set_ssh_target_user(self, usr=False):
+    if type(usr) is str:
+      self.sshTargetUsr = usr.replace(' ', '')
+    # else:
+    #   curUsr = getpass.getuser()
+    #   print('- Username not defined or in wrong format.', "\n  Proceed with current user: "+curUsr )
+    #   self.sshDeployUsr = curUsr
+
   #------------------------------------
   def set_public_key(self, keyPath=False):
     chk = True
@@ -110,7 +198,7 @@ class ssh_deploy:
       chk = False
 
     if chk:
-      self.pubKey = curKeyPath
+      self.pubKeyPath = curKeyPath
     else:
       print('- Invalid public key or file not readable.', "\n  Trying standard public key path...")
       methRes = self.try_usr_std_path()
@@ -118,18 +206,19 @@ class ssh_deploy:
         print('- Unable to use standard public key.', "\n  E.g. try another path.")
         return
       else:
-        self.pubKey = methRes
+        self.pubKeyPath = methRes
       
   #------------------------------------
-  def set_ssh_password(self, curPwd=False):
+  def set_ssh_deploy_password(self, curPwd=False):
     if type(curPwd) is not str or len(curPwd) < 1:
       print('- Invalid password input.', "\n  Please try again with string input.")
       return
     else:
-      self.sshPwd = curPwd
+      self.sshDeployPwd = curPwd
+      self.sshDeployKey = str
 
   #------------------------------------
-  def set_ssh_key(self, keyPath=False):
+  def set_ssh_deploy_key(self, keyPath=False):
     chk = True
     keyStr = ''
 
@@ -150,51 +239,136 @@ class ssh_deploy:
       chk = False
 
     if chk:
-      self.sshKey = curKeyPath
+      self.sshDeployKey = curKeyPath
+      self.sshDeployPwd = str
     else:
       print('- Invalid ssh key or file not readable.')
       return
   
   #------------------------------------
+  def print_object_config(self):
+    for varDef in self.paraList:
+      curName = varDef['name']
+      curDesc = varDef['description']
+      curVal = getattr(self, curName)
+      if type(curVal) == type:
+        curVal = '"not set"'
+      print(' - ', curDesc, curVal)
+
+
+  #------------------------------------
   def deploy_execute(self):
     chkResAry = self.check_deploy_ready()
     if len(chkResAry) > 0:
-      print('- Please set set following parameters first: ' + ', '.join(chkResAry))
+      print('*Please set following parameters first: ' + ', '.join(chkResAry))
       return
+    else:
+      for sshTargetHost in self.sshTargetHosts:
+        self.deploy_execute_one(sshTargetHost)
     
+  def deploy_execute_one(self, sshTargetHost):
+    print('*Deploy ssh public key on host: %s' %sshTargetHost)
+    #-Some temp vars for cleaner code---
+    usrHomePath = '/home/'+self.sshTargetUsr
+    usrSshPath = usrHomePath+'/.ssh/'
+    usrAuthKeysPath = usrSshPath + 'authorized_keys'
+    #print(usrAuthKeysPath)
+
+    #-Build the ssh client and establish connection---
     sshCli = paramiko.SSHClient()
     sshCli.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    if os.path.isfile(str(self.sshKey)):
-      keyObj = paramiko.RSAKey.from_private_key_file(self.sshKey)
-      sshCli.connect(self.sshHost, username=self.sshUsr, pkey=keyObj)
+    if os.path.isfile(str(self.sshDeployKey)):
+      keyObj = paramiko.RSAKey.from_private_key_file(self.sshDeployKey)
+      sshCli.connect(sshTargetHost, username=self.sshDeployUsr, pkey=keyObj)
     else:
-      sshCli.connect(self.sshHost, username=self.sshUsr, password=self.sshPwd)
+      sshCli.connect(sshTargetHost, username=self.sshDeployUsr, password=self.sshTargetPwd)
 
-    stdin, stdout, stderr = sshCli.exec_command('ls -lah /')
+    #-Check if target user already exists---
+    stdin, stdout, stderr = sshCli.exec_command('getent passwd')
     stdout=stdout.readlines()
-    print("".join(stdout))
+    stdOutStr = " ".join(stdout)
+    #print(stdOutStr)
     
-    # sshCli.exec_command('mkdir -p ~/.ssh/')
-    # sshCli.exec_command('echo "%s" > ~/.ssh/authorized_keys' % key)
-    # sshCli.exec_command('chmod 644 ~/.ssh/authorized_keys')
-    # sshCli.exec_command('chmod 700 ~/.ssh/')
+    #-Create target user incl. ssh folder and files, if not exists---
+    if self.sshTargetUsr not in stdOutStr:
+      #print(' - add user %s on target host' % self.sshTargetUsr)
+      sshCli.exec_command('sudo adduser %s' % self.sshTargetUsr)
+      sshCli.exec_command('sudo usermod -aG wheel %s' % self.sshTargetUsr)
+      sshCli.exec_command('sudo mkdir -p %s' % usrSshPath)
+      sshCli.exec_command('sudo chown -R '+self.sshTargetUsr+':'+self.sshTargetUsr+' ' + usrHomePath)
     
+    sshCli.exec_command('sudo touch %s' % usrAuthKeysPath)
+
+    #-Add user to admin groups (sudo/wheel)---
+    stdin, stdout, stderr = sshCli.exec_command('cat /etc/group')
+    stdout=stdout.readlines()
+    stdOutStr = " ".join(stdout)
+    if 'wheel' in stdOutStr:
+      sshCli.exec_command('sudo usermod -aG wheel %s' %self.sshTargetUsr )
+    elif 'sudo' in stdOutStr:
+      sshCli.exec_command('sudo usermod -aG wheel %s' %self.sshTargetUsr )
+
+
+    #-Get public key to deploy as string---
+    pubKeyObj = open(self.pubKeyPath)
+    pubKeyStr = pubKeyObj.read()
+    pubKeyStr = pubKeyStr.replace("\n", "")
+    
+    #-Get existing auth key file from target host---
+    stdin, stdout, stderr = sshCli.exec_command('sudo cat '+usrAuthKeysPath)
+    stdout=stdout.readlines()
+    authKeyStr = " ".join(stdout)
+   
+    #print(pubKeyStr, authKeyStr)
+
+    #-Deploy pub key if not in auth key file---
+    if pubKeyStr not in authKeyStr:
+      if self.sshTargetUsr != self.sshDeployUsr: sudo = 'sudo '
+      else: sudo = ''
+      #print(sudo + 'echo "'+pubKeyStr+'" >> '+ usrAuthKeysPath)
+      sshCli.exec_command(sudo + 'sh -c \'echo "%s" >> %s\'' %(pubKeyStr, usrAuthKeysPath)) #UIUIUIUIUI
+      sshCli.exec_command(sudo + 'chown '+self.sshTargetUsr+':'+self.sshTargetUsr + ' ' + usrAuthKeysPath)
+      sshCli.exec_command(sudo + 'chmod 644 %s' % usrAuthKeysPath)
+      sshCli.exec_command(sudo + 'chmod 700 %s' % usrSshPath)
+
     sshCli.close()
 
 
 
 #-App Runner------------------------------------------------
 if __name__ == '__main__':
-  testObj = ssh_deploy()
-  #testObj.set_ssh_user('ec2-user')
-  testObj.set_ssh_user()
-  #testObj.set_public_key('../testkey.pub')
-  testObj.set_public_key()
-  #testObj.set_ssh_password('Oviss1234!')
-  testObj.set_ssh_key('/home/scm/.ssh/id_rsa')
-  testObj.set_ssh_host('mgmt1')
-  test = testObj.check_deploy_ready()
-  testObj.deploy_execute()
 
-  print(testObj.sshUsr, testObj.pubKey, testObj.sshPwd, testObj.sshKey, str(test))
+  if "--interactive" in sys.argv:
+    print("continue with User Input Menu (PyInquirer)")
+    # import inquirer
+    # menuSelect = [
+    #   inquirer.List('act',
+    #     message="What size do you need?",
+    #     choices=['Jumbo', 'Large', 'Standard', 'Medium', 'Small', 'Micro'],
+    #   ),
+    # ]
+    # act = inquirer.prompt(menuSelect)
+    # print(act["act"])
 
+  else:
+    build_arg_parse()
+
+  # testObj = ssh_deploy()
+  # testObj.set_ssh_deploy_user('scm')
+  # #testObj.set_ssh_deploy_user()
+  # testObj.set_ssh_target_user('palim')
+  # testObj.set_public_key('/home/scm/.ssh/id_rsa.pub')
+  # #testObj.set_public_key()
+  # #testObj.set_ssh_deploy_password('Oviss1234!')
+  # testObj.set_ssh_deploy_key('/home/scm/.ssh/id_rsa')
+  # testObj.set_ssh_target_host('mgmt1')
+  # testObj.set_ssh_target_host('mgmt2')
+  # #test = testObj.check_deploy_ready()
+
+  # testObj.print_object_config()
+  # #testObj.deploy_execute()
+
+  
+
+
+  
