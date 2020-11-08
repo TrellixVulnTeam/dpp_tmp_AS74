@@ -45,7 +45,8 @@ def build_arg_parse():
     help="Choice (key or password): Set path to privat key for deployment.")
 
   args = AppParser.parse_args()
-  print(args)
+  return(args)
+  
 
 
 
@@ -351,7 +352,8 @@ if __name__ == '__main__':
     # print(act["act"])
 
   else:
-    build_arg_parse()
+    AppArgs = build_arg_parse()
+    print(AppArgs)
 
   # testObj = ssh_deploy()
   # testObj.set_ssh_deploy_user('scm')
