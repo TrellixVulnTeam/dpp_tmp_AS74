@@ -16,11 +16,11 @@ except: exit('Paramiko Client module for ptyhon3 is needed. Please install it fi
 # except: exit('Inquirer module for ptyhon3 is needed. Please install it first.')
 
 
-#-Set globals-----------------------------------------------
+#-Set globals----------------------------------------------------------------
 CurPath = os.path.dirname(os.path.realpath(__file__))
 
 
-#-Build the ArgParser---------------------------------------
+#-Build the ArgParser--------------------------------------------------------
 
 def build_arg_parse():
   AppParser = argparse.ArgumentParser()
@@ -50,7 +50,7 @@ def build_arg_parse():
 
 
 
-#-SSH deployer Class----------------------------------------
+#-SSH deployer Class----------------------------------------------------------
 class ssh_deploy:
 
   #-Fixed Class Vars------------------------------- 
@@ -76,7 +76,7 @@ class ssh_deploy:
     },
     { 
       'name': 'sshDeployUsr',
-      'description': 'ssh deploy user:       ',
+      'description': 'ssh deploy user:      ',
     },
     { 
       'name': 'sshDeployKey',
@@ -84,7 +84,7 @@ class ssh_deploy:
     },
     { 
       'name': 'pubKeyPath',
-      'description': 'path to public key file to deploy: ',
+      'description': 'public key path:      ',
     }
   ]
 
@@ -384,29 +384,66 @@ class ssh_deploy:
     sshCli.close()
     print(' - Deployment for host %s => executed' % sshTargetHost)
 
+#-SSH deployer Class----------------------------------------------------------
+class interactive_menu:
+  
+  sys.path.insert(0, './pip')
+  import PyInquirer
 
-#-App Runner------------------------------------------------
-if __name__ == '__main__':
+  #-Fixed Class Vars------------------------------- 
+  curDeploy = object
+  funcMapper = dict
+  
+  #-Initializer------------------------------------
+  def __init__(self):
+    print('*Starting interactive configuration menu')
 
-  if "--interactive" in sys.argv:
-    print("continue with User Input Menu (PyInquirer)")
+    self.curDeploy = ssh_deploy()
+    self.create_function_mapper()
+    
+    _ = os.system('clear')
 
-    sys.path.insert(0, './pip')
-    import PyInquirer
+    print('Your Configuration: ')
+    self.curDeploy.print_object_config()
 
-    CurDeploy = ssh_deploy()
-
-    funcMapper = {
-      "1. set ssh target hosts (required)": CurDeploy.set_ssh_target_host,
-      "2. set ssh target user (optional)": CurDeploy.set_ssh_target_user,
-      "3. set public key to deploy (required)": CurDeploy.set_public_key,
-      "4. set user for deployment (required)": CurDeploy.set_ssh_deploy_user,
-      "5. set password for deployment (required/choice)": CurDeploy.set_ssh_deploy_password,
-      "6. set private key path for deployment (required/choice)": CurDeploy.set_ssh_deploy_key
+    self.call_choice_list()
+    
+    
+  #-Main methods-----------------------------------
+  def create_function_mapper(self):
+    self.funcMapper = {
+      "1. add ssh target hosts (required)": {
+        "func": self.curDeploy.set_ssh_target_host,
+        "txt": "please enter ssh target host/s separated by comma: "
+      },
+      "2. set ssh target user (optional)": {
+        "func": self.curDeploy.set_ssh_target_user,
+        "txt": "please enter ssh target user name: "
+      },
+      "3. set public key to deploy (required)": {
+        "func": self.curDeploy.set_public_key,
+        "txt": "please enter path to public key: "
+      },
+      "4. set user for deployment (required)": {
+        "func": self.curDeploy.set_ssh_deploy_user,
+        "txt": "please enter user name od deployment user: "
+      },
+      "5. set password for deployment (required/choice)": {
+        "func": self.curDeploy.set_ssh_deploy_password,
+        "txt": "please enter deployment password: "
+      },
+      "6. set private key path for deployment (required/choice)": {
+        "func": self.curDeploy.set_ssh_deploy_key,
+        "txt": "please enter deployment key path: "
+      }
     }
 
+  #------------------------------------------
+  def call_choice_list(self):
+    print('')
+
     choiceList = []
-    for act, func in funcMapper.items():
+    for act, funcObj in self.funcMapper.items():
       choiceList.append(act)
 
     actSelect = [
@@ -418,11 +455,63 @@ if __name__ == '__main__':
         'filter': lambda val: val.lower()
       }
     ]
-    curSelect = PyInquirer.prompt(actSelect)
+    curSelect = self.PyInquirer.prompt(actSelect)
     curAct = curSelect['conf_act']
-    curFunc = funcMapper[curAct]
-    curFunc("mgmt1")
-    CurDeploy.print_object_config()
+    funcObj = self.funcMapper[curAct]
+    self.call_user_input(funcObj)
+
+    print('Your Configuration: ')
+    self.curDeploy.print_object_config()
+    self.call_choice_list()
+
+  #------------------------------------------
+  def call_user_input(self, funcObj):
+    usrIpt = input(funcObj['txt'])
+    funcObj['func'](usrIpt)
+    _ = os.system('clear')
+
+
+
+#-App Runner------------------------------------------------------------------
+if __name__ == '__main__':
+
+  if "--interactive" in sys.argv:
+    
+    CurMenu = interactive_menu()
+
+    # print("continue with User Input Menu (PyInquirer)")
+    # sys.path.insert(0, './pip')
+    # import PyInquirer
+
+    # CurDeploy = ssh_deploy()
+
+    # funcMapper = {
+    #   "1. set ssh target hosts (required)": CurDeploy.set_ssh_target_host,
+    #   "2. set ssh target user (optional)": CurDeploy.set_ssh_target_user,
+    #   "3. set public key to deploy (required)": CurDeploy.set_public_key,
+    #   "4. set user for deployment (required)": CurDeploy.set_ssh_deploy_user,
+    #   "5. set password for deployment (required/choice)": CurDeploy.set_ssh_deploy_password,
+    #   "6. set private key path for deployment (required/choice)": CurDeploy.set_ssh_deploy_key
+    # }
+
+    # choiceList = []
+    # for act, func in funcMapper.items():
+    #   choiceList.append(act)
+
+    # actSelect = [
+    #   {
+    #     'type': 'list',
+    #     'name': 'conf_act',
+    #     'message': 'Choose between the following actions',
+    #     'choices': choiceList,
+    #     'filter': lambda val: val.lower()
+    #   }
+    # ]
+    # curSelect = PyInquirer.prompt(actSelect)
+    # curAct = curSelect['conf_act']
+    # curFunc = funcMapper[curAct]
+    # curFunc("mgmt1")
+    # CurDeploy.print_object_config()
 
 
   else:
