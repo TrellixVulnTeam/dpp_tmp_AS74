@@ -67,24 +67,24 @@ class ssh_deploy:
       'description': 'ssh target host:      ',
     },
     { 
-      'name': 'sshTargetUsr',
-      'description': 'ssh target user:      ',
-    },
-    { 
-      'name': 'sshDeployPwd',
-      'description': 'ssh deploy password:  ',
+      'name': 'pubKeyPath',
+      'description': 'public key path:      ',
     },
     { 
       'name': 'sshDeployUsr',
       'description': 'ssh deploy user:      ',
     },
     { 
+      'name': 'sshDeployPwd',
+      'description': 'ssh deploy password:  ',
+    },
+    { 
       'name': 'sshDeployKey',
       'description': 'ssh deploy key:       ',
     },
     { 
-      'name': 'pubKeyPath',
-      'description': 'public key path:      ',
+      'name': 'sshTargetUsr',
+      'description': 'ssh target user:      ',
     }
   ]
 
@@ -145,7 +145,7 @@ class ssh_deploy:
   #-Main Methodes----------------------------------
 
   def set_ssh_target_host(self, curHost=False):
-    if type(curHost) is not str:
+    if type(curHost) is not str or curHost == '':
       print('- SSH host not set or in wrong format.', "\n  Try String" )
       return
 
@@ -416,25 +416,31 @@ class interactive_menu:
         "func": self.curDeploy.set_ssh_target_host,
         "txt": "please enter ssh target host/s separated by comma: "
       },
-      "2. set ssh target user (optional)": {
-        "func": self.curDeploy.set_ssh_target_user,
-        "txt": "please enter ssh target user name: "
-      },
-      "3. set public key to deploy (required)": {
+      "2. set public key to deploy (required)": {
         "func": self.curDeploy.set_public_key,
         "txt": "please enter path to public key: "
       },
-      "4. set user for deployment (required)": {
+      "3. set user for deployment (required)": {
         "func": self.curDeploy.set_ssh_deploy_user,
         "txt": "please enter user name od deployment user: "
       },
-      "5. set password for deployment (required/choice)": {
+      "4. set password for deployment (required/choice)": {
         "func": self.curDeploy.set_ssh_deploy_password,
         "txt": "please enter deployment password: "
       },
-      "6. set private key path for deployment (required/choice)": {
+      "5. set private key path for deployment (required/choice)": {
         "func": self.curDeploy.set_ssh_deploy_key,
         "txt": "please enter deployment key path: "
+      },
+      "6. set ssh target user (optional)": {
+        "func": self.curDeploy.set_ssh_target_user,
+        "txt": "please enter ssh target user name: "
+      },
+      "-> Execute deployment": {
+        "func": self.execute_deployment,
+      },
+      "-> Exit menu": {
+        "func": self.exit_menu,
       }
     }
 
@@ -452,7 +458,7 @@ class interactive_menu:
         'name': 'conf_act',
         'message': 'Choose between the following actions',
         'choices': choiceList,
-        'filter': lambda val: val.lower()
+        #'filter': lambda val: val.lower()
       }
     ]
     curSelect = self.PyInquirer.prompt(actSelect)
@@ -466,53 +472,30 @@ class interactive_menu:
 
   #------------------------------------------
   def call_user_input(self, funcObj):
-    usrIpt = input(funcObj['txt'])
-    funcObj['func'](usrIpt)
-    _ = os.system('clear')
+    if 'txt' in funcObj:
+      usrIpt = input(funcObj['txt'])
+      funcObj['func'](usrIpt)
+      _ = os.system('clear')
+    else:
+      funcObj['func']()
 
+  #------------------------------------------
+  def execute_deployment(self):
+    _ = os.system('clear')
+    self.curDeploy.deploy_execute()
+    self.curDeploy = ssh_deploy()
+
+  #------------------------------------------
+  def exit_menu(self):
+    exit('good by')
 
 
 #-App Runner------------------------------------------------------------------
 if __name__ == '__main__':
 
   if "--interactive" in sys.argv:
-    
     CurMenu = interactive_menu()
-
-    # print("continue with User Input Menu (PyInquirer)")
-    # sys.path.insert(0, './pip')
-    # import PyInquirer
-
-    # CurDeploy = ssh_deploy()
-
-    # funcMapper = {
-    #   "1. set ssh target hosts (required)": CurDeploy.set_ssh_target_host,
-    #   "2. set ssh target user (optional)": CurDeploy.set_ssh_target_user,
-    #   "3. set public key to deploy (required)": CurDeploy.set_public_key,
-    #   "4. set user for deployment (required)": CurDeploy.set_ssh_deploy_user,
-    #   "5. set password for deployment (required/choice)": CurDeploy.set_ssh_deploy_password,
-    #   "6. set private key path for deployment (required/choice)": CurDeploy.set_ssh_deploy_key
-    # }
-
-    # choiceList = []
-    # for act, func in funcMapper.items():
-    #   choiceList.append(act)
-
-    # actSelect = [
-    #   {
-    #     'type': 'list',
-    #     'name': 'conf_act',
-    #     'message': 'Choose between the following actions',
-    #     'choices': choiceList,
-    #     'filter': lambda val: val.lower()
-    #   }
-    # ]
-    # curSelect = PyInquirer.prompt(actSelect)
-    # curAct = curSelect['conf_act']
-    # curFunc = funcMapper[curAct]
-    # curFunc("mgmt1")
-    # CurDeploy.print_object_config()
-
+    #CurMenu.execute_deployment()
 
   else:
     AppArgs = build_arg_parse()
