@@ -142,7 +142,6 @@ class ssh_deploy:
             return False
 
 
-
   #-Main Methodes----------------------------------
 
   def set_ssh_target_host(self, curHost=False):
@@ -152,7 +151,7 @@ class ssh_deploy:
 
     if not self.ssh_port_scan(curHost):
       print('- SSH host not reachable' )
-      return
+      return False
     else:
       self.sshTargetHosts.append(curHost)
 
@@ -162,16 +161,20 @@ class ssh_deploy:
     if type(usr) is str:
       self.sshDeployUsr = usr.replace(' ', '')
       self.sshTargetUsr = usr.replace(' ', '')
-    else:
+    elif not usr:
       curUsr = getpass.getuser()
       print('- Username not defined or in wrong format.', "\n  Proceed with current user: "+curUsr )
       self.sshDeployUsr = curUsr
       self.sshTargetUsr = curUsr
+    else:
+      return False
   
   #------------------------------------
   def set_ssh_target_user(self, usr=False):
     if type(usr) is str:
       self.sshTargetUsr = usr.replace(' ', '')
+    else:
+      return False
     # else:
     #   curUsr = getpass.getuser()
     #   print('- Username not defined or in wrong format.', "\n  Proceed with current user: "+curUsr )
@@ -205,7 +208,7 @@ class ssh_deploy:
       methRes = self.try_usr_std_path()
       if not methRes:
         print('- Unable to use standard public key.', "\n  E.g. try another path.")
-        return
+        return False
       else:
         self.pubKeyPath = methRes
       
@@ -247,6 +250,52 @@ class ssh_deploy:
       return
   
   #------------------------------------
+  def args_to_object(self, AppArgs):
+
+    #-Add hostlist from argparse input---
+    tgtHosts = AppArgs.target_hosts.replace(' ', '').replace('/', '').replace('\\', '')
+    tgtHosts = tgtHosts.split(',')
+    tgtHosts = list(dict.fromkeys(tgtHosts))
+    #print(tgtHosts)
+    for tgtHost in tgtHosts:
+      self.set_ssh_target_host(tgtHost)
+    if len(self.sshTargetHosts) == 0:
+      exit('- Exit: no valid host in configuration')
+
+    #-Add public key from argparse input---
+    pubKeyPath = AppArgs.public_key
+    self.set_public_key(pubKeyPath)
+    if type(self.pubKeyPath) is type: 
+      exit('- Exit: no valid public key path in configuration')
+
+    #-Add deploy user from argparse input---
+    deplUsr = AppArgs.deploy_user
+    self.set_ssh_deploy_user(deplUsr)
+    if type(self.sshDeployUsr) is type: 
+      exit('- Exit: no valid user for deployment in configuration')
+
+    #-Add deploy password or key from argparse input---
+    if AppArgs.deploy_password:
+      #print("go for password")
+      deplPwd = AppArgs.deploy_password
+      self.set_ssh_deploy_password(deplPwd)
+    elif AppArgs.deploy_key:
+      #print("go for key")
+      deplKeyPath = AppArgs.deploy_key
+      self.set_ssh_deploy_key(deplKeyPath)
+
+    if type(self.sshDeployPwd) is type and type(self.sshDeployKey) is type: 
+      exit('- Exit: no valid user for deployment in configuration')
+
+    #-Optional:add target user from argparse input---
+    if AppArgs.target_user:
+      #print("go for target_user")
+      tgtUsr = AppArgs.target_user
+      self.set_ssh_target_user(tgtUsr)
+      if tgtUsr != self.sshTargetUsr:
+        print(' - Warning: unable to set target user in configuration')
+
+  #------------------------------------
   def print_object_config(self):
     for varDef in self.paraList:
       curName = varDef['name']
@@ -266,7 +315,7 @@ class ssh_deploy:
     else:
       for sshTargetHost in self.sshTargetHosts:
         self.deploy_execute_one(sshTargetHost)
-    
+  #--------------------
   def deploy_execute_one(self, sshTargetHost):
     print('*Deploy ssh public key on host: %s' %sshTargetHost)
     #-Some temp vars for cleaner code---
@@ -282,7 +331,7 @@ class ssh_deploy:
       keyObj = paramiko.RSAKey.from_private_key_file(self.sshDeployKey)
       sshCli.connect(sshTargetHost, username=self.sshDeployUsr, pkey=keyObj)
     else:
-      sshCli.connect(sshTargetHost, username=self.sshDeployUsr, password=self.sshTargetPwd)
+      sshCli.connect(sshTargetHost, username=self.sshDeployUsr, password=self.sshDeployPwd)
 
     #-Check if target user already exists---
     stdin, stdout, stderr = sshCli.exec_command('getent passwd')
@@ -333,7 +382,7 @@ class ssh_deploy:
       sshCli.exec_command(sudo + 'chmod 700 %s' % usrSshPath)
 
     sshCli.close()
-
+    print(' - Deployment for host %s => executed' % sshTargetHost)
 
 
 #-App Runner------------------------------------------------
@@ -341,20 +390,53 @@ if __name__ == '__main__':
 
   if "--interactive" in sys.argv:
     print("continue with User Input Menu (PyInquirer)")
-    # import inquirer
-    # menuSelect = [
-    #   inquirer.List('act',
-    #     message="What size do you need?",
-    #     choices=['Jumbo', 'Large', 'Standard', 'Medium', 'Small', 'Micro'],
-    #   ),
-    # ]
-    # act = inquirer.prompt(menuSelect)
-    # print(act["act"])
+
+    sys.path.insert(0, './pip')
+    import PyInquirer
+
+    CurDeploy = ssh_deploy()
+
+    funcMapper = {
+      "1. set ssh target hosts (required)": CurDeploy.set_ssh_target_host,
+      "2. set ssh target user (optional)": CurDeploy.set_ssh_target_user,
+      "3. set public key to deploy (required)": CurDeploy.set_public_key,
+      "4. set user for deployment (required)": CurDeploy.set_ssh_deploy_user,
+      "5. set password for deployment (required/choice)": CurDeploy.set_ssh_deploy_password,
+      "6. set private key path for deployment (required/choice)": CurDeploy.set_ssh_deploy_key
+    }
+
+    choiceList = []
+    for act, func in funcMapper.items():
+      choiceList.append(act)
+
+    actSelect = [
+      {
+        'type': 'list',
+        'name': 'conf_act',
+        'message': 'Choose between the following actions',
+        'choices': choiceList,
+        'filter': lambda val: val.lower()
+      }
+    ]
+    curSelect = PyInquirer.prompt(actSelect)
+    curAct = curSelect['conf_act']
+    curFunc = funcMapper[curAct]
+    curFunc("mgmt1")
+    CurDeploy.print_object_config()
+
 
   else:
     AppArgs = build_arg_parse()
-    print(AppArgs)
+    #print(AppArgs)
+    
+    CurDeploy = ssh_deploy()
+    CurDeploy.args_to_object(AppArgs)
+    chk = CurDeploy.check_deploy_ready()
+    CurDeploy.print_object_config()
+    CurDeploy.deploy_execute()
 
+
+#-Test Area--------------------------------------
   # testObj = ssh_deploy()
   # testObj.set_ssh_deploy_user('scm')
   # #testObj.set_ssh_deploy_user()

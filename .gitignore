@@ -1,2 +1,5 @@
 pkg/
 *.rpm
+__pycache__/
+*.pyc
+examples/
