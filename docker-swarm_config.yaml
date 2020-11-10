@@ -1,5 +1,5 @@
 
-#Apply via: ansible-playbook -i ./inventory.yaml --become docker-install.yaml
+#Apply via: ansible-playbook -i ./inventory.yaml --become docker-swarm_config.yaml
 
 #---------------------------------------------------------------
 

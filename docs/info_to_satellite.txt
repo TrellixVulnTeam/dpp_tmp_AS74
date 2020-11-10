@@ -1,0 +1,11 @@
+ISO Source for offline installation: 
+satellite-6.8.0-rhel-7-x86_64-dvd.iso
+
+
+
+
+HowTo: https://access.redhat.com/documentation/en-us/red_hat_satellite/6.8/html/installing_satellite_server_from_a_disconnected_network/index
+
+Install via:
+ - ./install_packages
+ - satellite-installer --scenario satellite  --disable-system-checks

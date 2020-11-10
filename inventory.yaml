@@ -12,6 +12,14 @@ all:
       - docker-ee-cli
       - docker-ee
       - containerd.io
+    docker_ucp_images:
+      - name: "nginx:latest"
+        file: container_nginx.tar 
+      - name: "docker/ucp:3.3.0"
+        file: ucp_images_3.3.0.tar.gz 
+    docker_ucp_srv_name: ucp
+    docker_ucp_usr: admin
+    #docker_ucp_pwd: CHANGEME
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
     swarm_init: mgmt1 # Achtung is doppelt

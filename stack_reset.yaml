@@ -6,12 +6,16 @@
 - name: Reset Stack Config 
   hosts: stack
   vars_prompt:
+    - name: ucp_reset
+      prompt: "Remove docker UCP? (yes/no)"
+      private: no
     - name: swarm_reset
       prompt: "Reset docker swarm? (yes/no)"
       private: no
     - name: docker_reset
       prompt: "Uninstall docker? (yes/no)"
       private: no
+      default: "no"
   
   tasks:
     - name: Gather the package facts
@@ -25,6 +29,18 @@
       - name: "Delete all services"
         shell: docker service rm $(docker service ls -q)
         when: "'inactive' not in result.stdout and swarm_reset == 'yes' and inventory_hostname == swarm_init"
+      
+      - name: "get Docker Swarm Cluster ID ;)"
+        block: 
+          - shell: CLUSTERID=$(cut -d':' -f2 <<<"$(docker info | grep ClusterID)") && echo $CLUSTERID
+            register: cluster_id
+          - debug:
+              msg: "{{cluster_id.stdout}}"
+        when: "ucp_reset == 'yes' and inventory_hostname == swarm_init"
+
+      - name: "Remove Docker UCP"
+        shell: "docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --name {{docker_ucp_srv_name}} docker/ucp:3.3.0 uninstall-ucp --id {{cluster_id.stdout}} "
+        when: "ucp_reset == 'yes' and inventory_hostname == swarm_init"
 
       - name: "Destroy swarm config "
         shell: docker swarm leave --force

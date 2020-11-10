@@ -414,7 +414,7 @@ class interactive_menu:
     self.funcMapper = {
       "1. add ssh target hosts (required)": {
         "func": self.curDeploy.set_ssh_target_host,
-        "txt": "please enter ssh target host/s separated by comma: "
+        "txt": "please enter a ssh target host: "
       },
       "2. set public key to deploy (required)": {
         "func": self.curDeploy.set_public_key,
