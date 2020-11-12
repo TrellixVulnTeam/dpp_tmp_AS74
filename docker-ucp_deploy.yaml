@@ -3,17 +3,18 @@
 
 #---------------------------------------------------------------
 
-# - name: Copy and Import Docker Images 
-#   hosts: stack
-#   tasks:
-#     - name: "Copy docker image export (*.tar) to target hosts"
-#       copy:
-#         src: "{{docker_img_src}}/"
-#         dest: "{{upload_target}}/docker_images"
+- name: Copy and Import Docker Images 
+  hosts: stack
+  tasks:
+    - name: "Copy docker image export (*.tar) to target hosts"
+      copy:
+        src: "{{docker_img_src}}/"
+        dest: "{{upload_target}}/docker_images"
     
-#     - name: Import docker image from upladed src
-#       shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
-#       loop: "{{docker_ucp_images}}"
+    - name: Import docker image from upladed src
+      shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
+      loop: "{{docker_ucp_images}}"
+
 #-----------------------------------------
 
 - name: Deploy Docker UCP on Stack 
@@ -25,11 +26,14 @@
       default: admin
     - name: ucp_pwd
       prompt: "Enter UCP admin password (complex)"
-      private: no
-  
+      private: yes
+  vars:
+    ucp_run_command: "{{ lookup('template', './conf_templates/ucp_run.command') }}"
+
   tasks:
+    - debug: "msg={{ucp_run_command}}"
     - name: "Initialite UCP Containers"
-      shell: "docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --name {{docker_ucp_srv_name}} docker/ucp:3.3.0 install  --host-address {{hostlist[inventory_hostname]['ip']}} --admin-password {{ucp_pwd}} --admin-username {{ucp_admin}} --force-minimums"
+      shell: "{{ucp_run_command}}"
       #register: result
     
-#-----------------------------------------
+#---------------------------------------------------------------
