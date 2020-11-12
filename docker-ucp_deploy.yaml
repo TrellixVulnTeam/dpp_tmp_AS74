@@ -1,0 +1,39 @@
+
+#Apply via: ansible-playbook -i ./inventory.yaml --become docker-ucp_deploy.yaml
+
+#---------------------------------------------------------------
+
+- name: Copy and Import Docker Images 
+  hosts: stack
+  tasks:
+    - name: "Copy docker image export (*.tar) to target hosts"
+      copy:
+        src: "{{docker_img_src}}/"
+        dest: "{{upload_target}}/docker_images"
+    
+    - name: Import docker image from upladed src
+      shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
+      loop: "{{docker_ucp_images}}"
+
+#-----------------------------------------
+
+- name: Deploy Docker UCP on Stack 
+  hosts: swarm_init
+  vars_prompt:
+    - name: ucp_admin
+      prompt: "Enter UCP admin user name"
+      private: no
+      default: admin
+    - name: ucp_pwd
+      prompt: "Enter UCP admin password (complex)"
+      private: yes
+  vars:
+    ucp_run_command: "{{ lookup('template', './conf_templates/ucp_run.command') }}"
+
+  tasks:
+    - debug: "msg={{ucp_run_command}}"
+    - name: "Initialite UCP Containers"
+      shell: "{{ucp_run_command}}"
+      #register: result
+    
+#---------------------------------------------------------------

@@ -1,12 +1,38 @@
 Source: https://docs.mirantis.com/docker-enterprise/v3.0/dockeree-products/ucp/admin/install-ucp.html#step-by-step-ucp-installation
 
 # Pull the latest version of UCP
-docker image pull docker/ucp:3.2.5
+https://docs.mirantis.com/docker-enterprise/v3.1/dockeree-products/ucp/install-ucp.html
+
+docker image pull docker/ucp:3.3.0
+
+Info for offline installation: 
+   - All required docker images in https://packages.docker.com/caas/ucp_images_3.3.0.tar.gz
+
 
 # Install UCP
+https://docs.mirantis.com/docker-enterprise/v3.1/dockeree-products/ucp/ucp-cli-reference/ucp-cli-install.html
+
 docker container run --rm -it --name ucp \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  docker/ucp:3.2.5 install \
+  docker/ucp:3.3.0 install \
   --host-address <node-ip-address> \
   --interactive
 
+
+# UnInstall UCP
+docker container run --rm -it \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --name ucp \
+  docker/ucp:3.3.0 uninstall-ucp --interactive
+
+docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --name ucp docker/ucp:3.3.0 install  --host-address 10.10.10.21 --admin-password Ucp4Dpp! --admin-username admin --force-minimums
+
+ 
+Fallback:
+docker service rm $(docker service ls -f name=ucp- -q)
+docker container rm -f $(docker container ps -a -f name=ucp- -f name=k8s_ -q)
+docker volume rm $(docker volume ls -f name=ucp -q)
+
+Hard Fallback: 
+docker kill $(docker ps -aq)
+docker rm $(docker ps -aq)
