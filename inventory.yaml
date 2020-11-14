@@ -1,6 +1,9 @@
 all:
   vars:
     ansible_usr: "scm"
+    satellite_katello_consumer: "katello-ca-consumer-latest.noarch.rpm" 
+    satellite_org: "Default_Organization"
+    satellite_env: "Library"
     docker_ce_src: "./src/docker_ce"
     docker_ee_src: "/mnt/repos/docker_ee"
     docker_img_src: "/mnt/repos/docker_images"
@@ -29,6 +32,10 @@ all:
         ip: "10.10.10.10"
         hostname: "controller"
         os: "el8"
+      satellite:
+        ip: "10.10.10.11"
+        hostname: "satellite"
+        os: "el7"
       mgmt1:
         ip: "10.10.10.21"
         hostname: "mgmt1"
@@ -48,6 +55,8 @@ all:
   hosts:
     controller:
       ansible_host: controller 
+    satellite:
+      ansible_host: satellite 
     mgmt1:
       ansible_host: mgmt1
     mgmt2:
@@ -60,6 +69,7 @@ all:
     controllers:
       hosts: 
         controller:
+        satellite:
     mgmt:
       hosts:
         mgmt1:

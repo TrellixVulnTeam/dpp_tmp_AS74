@@ -42,6 +42,20 @@
       prompt: "Disable software firewall on all stack hosts? (yes/no)"
       private: no
       default: 'no'
+    - name: satellite_register
+      prompt: "Register hosts in Satellite? (yes/no)"
+      private: no
+      default: 'no'
+    - name: satellite_reg_usr
+      prompt: "Satellite Admin User"
+      private: no
+      default: 'admin'
+      when: satellite_register == 'yes'
+    - name: satellite_reg_pwd
+      prompt: "Satellite Admin Password"
+      private: yes
+      when: satellite_register == 'yes'
+
 
   tasks:
     #- name: Check host connectivity
@@ -93,5 +107,18 @@
         - template: 
             src: "./conf_templates/local.repo.template"
             dest: "/etc/yum.repos.d/local.repo"
-  
+    
+    - name: Register hosts in Satellite Org 
+      block:
+        - get_url:
+            url: "https://satellite.dpp.dev/pub/{{satellite_katello_consumer}}"
+            dest: "{{upload_target}}/{{satellite_katello_consumer}}"
+            validate_certs: no
+        - yum:
+            name: "{{upload_target}}/{{satellite_katello_consumer}}"
+            state: present
+            disable_gpg_check : yes
+        - shell: 'subscription-manager register --org="{{satellite_org}}" --environment="{{satellite_env}}" --username="{{satellite_reg_usr}}" --password="{{satellite_reg_pwd}}"'
+      when: satellite_register == 'yes'
+        
 #---------------------------------------------------------------

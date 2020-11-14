@@ -12,8 +12,11 @@ else
 fi
 
 #yum install -y epel-release
-yum install -y $EPELURL
+yum install -y $EPELURL 
+yum install -y yumdownloader
 
-yum install -y --downloadonly --downloaddir=$PWD/$PKGDIR ansible
+#yum install -y --downloadonly --downloaddir=$PWD/$PKGDIR ansible
+yumdownloader --resolve --destdir=$PWD/$PKGDIR ansible
+
 
 yum erase -y $YUMPKGNAME

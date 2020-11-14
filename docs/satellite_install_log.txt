@@ -1,0 +1,27 @@
+[root@satellite iso]# ./install_packages
+This script will install the satellite packages on the current machine.
+   - Ensuring we are in an expected directory.
+   - Copying installation files.
+   - Creating a Repository File
+   - Creating RHSCL Repository File
+   - Creating sat-maintenance Repository File
+   - Checking to see if Satellite is already installed.
+   - Importing the gpg key.
+warning: /var/cache/yum/x86_64/7Server/epel/packages/ansible-2.9.14-1.el7.noarch.rpm: Header V4 RSA/SHA256 Signature, key ID 352c64e5: NOKEY
+Importing GPG key 0x352C64E5:
+ Userid     : "Fedora EPEL (7) <epel@fedoraproject.org>"
+ Fingerprint: 91e9 7d7c 4a5e 96f1 7f3e 888f 6a2f aea2 352c 64e5
+ Package    : epel-release-7-12.noarch (installed)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+   - Installation repository will remain configured for future package installs.
+   - Installation media can now be safely unmounted.
+
+
+[ERROR 2020-11-13T21:53:48 verbose] foreman-maintain packages is-locked --assumeyes failed! Check the output for error!
+
+Something went wrong! Check the log for ERROR-level output
+The full log is at /var/log/foreman-installer/satellite.log
+Package versions are being locked.
+
+
+'pulp-manage-db' returned 1 instead of one of [0]

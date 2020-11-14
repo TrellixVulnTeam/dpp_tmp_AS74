@@ -13,6 +13,9 @@ fi
 yum install -y yum-utils
 yum-config-manager --add-repo $DOCKERURL
 
-yum install -y --downloadonly --downloaddir=$PWD/$PKGDIR docker-ce docker-ce-cli containerd.io
+yum install -y yumdownloader
+
+#yum install -y --downloadonly --downloaddir=$PWD/$PKGDIR docker-ce docker-ce-cli containerd.io
+yumdownloader --resolve --destdir=$PWD/$PKGDIR docker-ce docker-ce-cli containerd.io
 
 yum-config-manager --disable docker-ce*

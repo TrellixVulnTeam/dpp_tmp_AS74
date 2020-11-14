@@ -1,0 +1,32 @@
+
+Basis:
+  - Redhat 7.9 minimal (activated and yum online access)
+  - Saltellite 6.8 install io (satellite-6.8.0-rhel-7-x86_64-dvd.iso) 
+  - AWS EC2 Instance t2.xlarge (4core, 16GB RAM, 256GB SSD Drive)
+  - full root access
+
+Base Config (as root):
+  - yum update and upgrade 
+  - yum install sos chrony
+  - timedatectl set-timezone Europe/Berlin
+  - hostnamectl set hostname satellite.dpp.dev
+  - mkdir /mnt/iso && mount -t iso9660 -o loop /PATH/TO/ISO /mnt/iso
+  - cd /mnt/iso (install_packages script only works in DVD root dir... lol;)
+  - ./install_packages
+  - sudo umount /mnt/iso/
+  - satellite-installer --scenario satellite -v
+    => Failed
+  - for i in pulp_resource_manager pulp_workers pulp_celerybeat; do service $i stop; done
+  - satellite-installer --scenario satellite -v
+    => Failed
+  - satellite-installer --reset
+  - reboot
+  - yum remove -y rh-amazon-rhui-client*
+  - satellite-installer --scenario satellite -v
+    => Failed
+  - python -c "import kombu; print(kombu.__version__)"
+    => 4.0.2
+  - rpm -ivh python2-kombu-4.2.2-1.el7.noarch.rpm --force
+  - satellite-installer --scenario satellite -v
+    => Working ;)
+    => Reason: Wrong version of python module kombu (THIS SUCKES!!!)
