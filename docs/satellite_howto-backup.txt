@@ -1,0 +1,3 @@
+
+# foreman-maintain backup online -y /tmp/satellite_bu
+# foreman-maintain backup online -y -i /tmp/satellite_bu/satellite-backup-2020-xx-xx-xx-xx-xx/ /tmp/satellite_bu/
