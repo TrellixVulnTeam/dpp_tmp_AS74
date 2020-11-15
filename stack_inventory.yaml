@@ -1,9 +1,6 @@
 all:
   vars:
     ansible_usr: "scm"
-    satellite_katello_consumer: "katello-ca-consumer-latest.noarch.rpm" 
-    satellite_org: "Default_Organization"
-    satellite_env: "Library"
     docker_ce_src: "./src/docker_ce"
     docker_ee_src: "/mnt/repos/docker_ee"
     docker_img_src: "/mnt/repos/docker_images"

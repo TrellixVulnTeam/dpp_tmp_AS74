@@ -1,0 +1,55 @@
+all:
+  vars:
+    target_usr: "root"
+    target_ssh_folder: "/root/.ssh"
+    target_pub_key: "/root/.ssh/id_rsa.pub"
+    
+    satellite_domain: "dpp.dev"
+    satellite_fqdn: satellite.dpp.dev
+    satellite_ip: 10.10.10.11
+    satellite_katello_consumer: "katello-ca-consumer-latest.noarch.rpm" 
+    satellite_org: "Default_Organization"
+    satellite_env: "Library"
+
+    upload_target: "/tmp"
+  
+  hosts:
+    # mgmt1:
+    #   #ansible_host: mgmt1
+    #   ansible_host: 10.10.10.21
+    #   ansible_connection: ssh
+    #   ansible_user: ec2-user
+    #   ansible_ssh_private_key_file: /root/dpp.pem
+    #   #ansible_ssh_pass: "APASSWORD!" # -> please avoid hardcoded passwords and use --ask-become-pass instead
+
+    # mgmt2:
+    #   #ansible_host: mgmt2
+    #   ansible_host: 10.10.10.22
+    #   ansible_connection: ssh
+    #   ansible_user: ec2-user
+    #   ansible_ssh_private_key_file: /root/dpp.pem
+    #   #ansible_ssh_pass: "APASSWORD!" # -> please avoid hardcoded passwords and use --ask-become-pass instead
+
+    # wrk1:
+    #   #ansible_host: wrk1
+    #   ansible_host: 10.10.10.31
+    #   ansible_connection: ssh
+    #   ansible_user: ec2-user
+    #   ansible_ssh_private_key_file: /root/dpp.pem
+    #   #ansible_ssh_pass: "APASSWORD!" # -> please avoid hardcoded passwords and use --ask-become-pass instead
+
+    # wrk2:
+    #   #ansible_host: wrk2
+    #   ansible_host: 10.10.10.32
+    #   ansible_connection: ssh
+    #   ansible_user: ec2-user
+    #   ansible_ssh_private_key_file: /root/dpp.pem
+    #   #ansible_ssh_pass: "APASSWORD!" # -> please avoid hardcoded passwords and use --ask-become-pass instead
+
+    wrk3:
+      #ansible_host: wrk3
+      ansible_host: 10.10.10.33
+      ansible_connection: ssh
+      ansible_user: ec2-user
+      ansible_ssh_private_key_file: /root/dpp.pem
+      #ansible_ssh_pass: "APASSWORD!" # -> please avoid hardcoded passwords and use --ask-become-pass instead
