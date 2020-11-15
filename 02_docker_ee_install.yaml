@@ -1,4 +1,4 @@
-#Apply via: ansible-playbook -i ./inventory.yaml --become docker_ee_install.yaml
+#Apply via: ansible-playbook -i ./stack_inventory.yaml --become docker_ee_install.yaml
 
 #---------------------------------------------------------------
 

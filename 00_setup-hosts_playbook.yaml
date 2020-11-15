@@ -1,0 +1,74 @@
+#Apply via: ansible-playbook -i ./00_setup-hosts_inventory.yaml --become 00_setup-hosts_playbook.yaml
+# Optional --ask-become-pass
+
+#---------------------------------------------------------------
+- name: "Deploy ssh public key to target hosts"
+  gather_facts: yes
+  hosts: all
+  vars:
+  vars_prompt:
+  - name: satellite_register
+    prompt: "Register hosts in Satellite? (yes/no)"
+    private: no
+    default: 'no'
+  - name: satellite_reg_usr
+    prompt: "Satellite Admin User"
+    private: no
+    default: 'admin'
+    when: satellite_register == 'yes'
+  - name: satellite_reg_pwd
+    prompt: "Satellite Admin Password"
+    private: yes
+    when: satellite_register == 'yes'
+
+  tasks:
+  - name: Set local hostnames
+    hostname:
+      name: "{{inventory_hostname}}.{{satellite_domain}}"
+  - name: "Create ssh target user"
+    user:
+      name: "{{target_usr}}"
+      group: wheel
+      state: present
+      #state: absent
+      #remove: yes
+    
+  - name: "Add publich key in target users authorized keys" 
+    authorized_key:
+      user: "{{target_usr}}"
+      state: present
+      #state: absent
+      key: "{{ lookup('file', target_pub_key) }}"
+
+  - name: Register hosts in Satellite Org 
+    block:
+      - name: get /etc/hosts content
+        slurp:
+          src: /etc/hosts
+        register: etc_hosts
+      # - debug: "msg={{ etc_hosts['content'] | b64decode }}"
+      - name: Add Satellite hostname to local hosts file
+        lineinfile:
+          path: /etc/hosts
+          regexp: '^{{satellite_fqdn}}'
+          state: absent
+          create: no
+        when: satellite_fqdn not in etc_hosts['content'] | b64decode
+      - lineinfile:
+          path: /etc/hosts
+          line: "{{satellite_ip}} {{satellite_fqdn}}"
+          create: no
+        when: satellite_fqdn not in etc_hosts['content'] | b64decode
+      - get_url:
+          url: "https://{{satellite_fqdn}}/pub/{{satellite_katello_consumer}}"
+          dest: "{{upload_target}}/{{satellite_katello_consumer}}"
+          validate_certs: no
+      # - yum:
+      #     name: "{{upload_target}}/{{satellite_katello_consumer}}"
+      #     state: present
+      #     disable_gpg_check : yes
+      - shell: rpm -ivh --force {{upload_target}}/{{satellite_katello_consumer}}
+        args:
+          warn: false
+      - shell: 'subscription-manager register --org="{{satellite_org}}" --environment="{{satellite_env}}" --username="{{satellite_reg_usr}}" --password="{{satellite_reg_pwd}}" --force'
+    when: satellite_register == 'yes'

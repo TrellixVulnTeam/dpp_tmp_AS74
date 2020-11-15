@@ -1,5 +1,5 @@
 
-#Apply via: ansible-playbook -i ./inventory.yaml --become stack_base_config.yaml
+#Apply via: ansible-playbook -i ./stack_inventory.yaml --become stack_base_config.yaml
 
 #---------------------------------------------------------------
 
@@ -84,14 +84,17 @@
         name: sshd
         state: restarted
 
-    - name: Copy local yum repo config template and move existing conf files
-      block:
-        - file:
-            path: "/home/{{ansible_usr}}/bu"
-            state: directory
-        - shell: "mv /etc/yum.repos.d/*.repo /home/{{ansible_usr}}/bu/"
-        - template: 
-            src: "./conf_templates/local.repo.template"
-            dest: "/etc/yum.repos.d/local.repo"
-  
+    ### INFO: Managed by Satellite ###
+    # - name: Copy local yum repo config template and move existing conf files
+    #   block:
+    #     - file:
+    #         path: "/home/{{ansible_usr}}/bu"
+    #         state: directory
+    #     - shell: "mv /etc/yum.repos.d/*.repo /home/{{ansible_usr}}/bu/"
+    #     - template: 
+    #         src: "./conf_templates/local.repo.template"
+    #         dest: "/etc/yum.repos.d/local.repo"
+    
+    
+        
 #---------------------------------------------------------------

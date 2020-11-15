@@ -1,5 +1,5 @@
 
-#Apply via: ansible-playbook -i ./inventory.yaml --become docker-swarm_config.yaml
+#Apply via: ansible-playbook -i ./stack_inventory.yaml --become docker-swarm_config.yaml
 
 #---------------------------------------------------------------
 
