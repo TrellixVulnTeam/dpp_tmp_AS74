@@ -1,0 +1,49 @@
+
+----------------------------------------------------------------------------------------------------
+
+1. Rhel 7.8 DVD from https://developers.redhat.com/ on KVM VM -> minimal installation 
+
+  Error:
+    This script will install the satellite packages on the current machine.
+      - Ensuring we are in an expected directory.
+      - Copying installation files.
+      - Creating a Repository File
+      - Creating RHSCL Repository File
+      - Creating sat-maintenance Repository File
+      - Checking to see if Satellite is already installed.
+      - Importing the gpg key.
+    Error: Package: candlepin-selinux-3.1.21-1.el7sat.noarch (satellite-local)
+              Requires: selinux-policy >= 3.13.1-266.el7_8.1
+              Installed: selinux-policy-3.13.1-266.el7.noarch (@anaconda/7.8)
+                  selinux-policy = 3.13.1-266.el7
+    Error: Package: pulp-selinux-2.21.3-1.el7sat.noarch (satellite-local)
+              Requires: selinux-policy >= 3.13.1-266.el7_8.1
+              Installed: selinux-policy-3.13.1-266.el7.noarch (@anaconda/7.8)
+                  selinux-policy = 3.13.1-266.el7
+
+  Resolution:
+    - download selinux-policy >= 3.13.1-266.el7_8.1
+      e.g. via: # curl -o selinux-policy-3.13.1-266.el7_8.1.noarch.rpm http://rpmfind.net/linux/centos/7.8.2003/updates/x86_64/Packages/selinux-policy-3.13.1-266.el7_8.1.noarch.rpm
+
+    - install via rpm force
+      # rpm -ivh --force selinux-policy-3.13.1-266.el7_8.1.noarch.rpm
+
+----------------------------------------------------------------------------------------------------
+
+2. Rhel 7.9 2020 on AWS EC2 -> minimal installation with AWS cloud-init preparation 
+
+  Error:
+    'pulp-manage-db' returned 1 instead of one of [0]
+
+  Resolution:
+    - run: # pulp-manage-db
+      check which python module as "wrong" version
+      E.g.: pkg_resources.DistributionNotFound: kombu>=4.2.0,<5.0
+
+    - download "right" package version 
+      e.g. via: # curl -o python2-kombu-4.2.2-1.el7.noarch.rpm https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/p/python2-kombu-4.2.2-1.el7.noarch.rpm
+
+    - install via rpm force
+    # rpm -ivh --force python2-kombu-4.2.2-1.el7.noarch.rpm
+
+----------------------------------------------------------------------------------------------------
