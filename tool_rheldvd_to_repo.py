@@ -4,8 +4,13 @@
 #-Import required modules----------------------------------------------------
 import os
 import sys
+import time
 import subprocess 
 import argparse
+#import threading
+import multiprocessing
+import SimpleHTTPServer
+import SocketServer
 #import pylibmount as mnt
 
 #-Global Vars----------------------------------------------------------------
@@ -36,6 +41,9 @@ class repo:
   newMnt = False
   repoPath = "/"
   repoReady = False
+  httpPort = 8000
+  curServer = None
+  repoUrl = "http://127.0.0.1:"+str(httpPort)+"/"
   
 
   #-Initializer-----------------------------------
@@ -175,7 +183,86 @@ class repo:
     self.repoReady = True
 
   #---------------------------------------
+  def start_http_server(self):
+    if not self.repoReady:
+      return False
 
+    def start_thread(mntPoint):
+      os.chdir(mntPoint)
+      SrvHandler = SimpleHTTPServer.SimpleHTTPRequestHandler
+      SrvHttpd = SocketServer.TCPServer(("", self.httpPort), SrvHandler)
+      SrvHttpd.serve_forever()
+
+    fullRepoPath = self.mntPoint + '/' + self.repoPath
+    fullRepoPath = fullRepoPath.replace("//", "/")
+
+    curServer = multiprocessing.Process(target=start_thread, args=(fullRepoPath,))
+    curServer.daemon = True 
+    curServer.start()
+    self.curServer = curServer
+  
+  #---------------------------
+  def stop_http_serve(self):
+    time.sleep(2)
+    if self.curServer == None:
+      print('  WARN: No http server running. nothing todo.' )
+      return 
+    else:
+      self.curServer.terminate()
+  
+  #---------------------------
+  def curl_content_test(self):
+    spObj = subprocess.Popen(
+      "curl "+self.repoUrl, 
+      shell=True, 
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE
+    )
+    spStdOut = spObj.stdout.read()
+    print(spStdOut)
+
+  #---------------------------------------
+  
+  def import_content(self):
+    
+    productName = "palim"
+    productDescription = "Just for Testing"
+    satelliteOrg = "Default Organization"
+
+    repoName = "palim repo"
+    repoContent = "yum" 
+    repoViaHttp = "true"
+    repoUrl = self.repoUrl
+
+
+    productObj = {
+      "--name": productName,
+      "--description": productDescription,
+      "--organization": satelliteOrg,
+    }
+    repoObj = {
+      "--name": repoName,
+      "--content-type": repoContent,
+      "--publish-via-http": repoViaHttp,
+      "--url": repoUrl,
+      "--product": productName,
+      "--organization": satelliteOrg,
+    }
+
+    satCmd = 'hammer product create'
+    for key, val in productObj.items():
+      satCmd += ' ' + key + ' "' + val + '"' 
+    print(satCmd)
+
+    satCmd = 'hammer repository create'
+    for key, val in repoObj.items():
+      if val == "true":
+        cusVal = 'true'
+      else:
+        cusVal = '"'+val+'"'
+
+      satCmd += ' ' + key + ' ' + cusVal
+    print(satCmd)
 
   
 
@@ -193,7 +280,14 @@ if __name__ == '__main__':
   myRepo.mount_iso()
   myRepo.chk_config_ready()
   myRepo.print_obj_config()
+  
+  myRepo.start_http_server()
+  myRepo.curl_content_test()
+  myRepo.import_content()
+
+  myRepo.stop_http_serve()
   myRepo.umount_iso()
+  
 
 #-----------------------------------------------------------------------------
 
