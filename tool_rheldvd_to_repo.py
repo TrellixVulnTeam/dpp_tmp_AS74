@@ -32,7 +32,7 @@ def build_arg_parse():
 class repo:
   isoPath = None
   mntPoint = None
-  stdMntPoint = "/mnt/iso"
+  mntOk = False
   newMnt = False
   repoPath = "/"
   repoReady = False
@@ -69,10 +69,12 @@ class repo:
   def set_repo_path(self, repoPath):
    
     repoPath = repoPath.replace(" ", "")
-    if '/' not in repoPath or not repoPath.startswith('/') or not repoPath.endswith('/'):
-      print('  WARN: Path (%s) must be in a valid format and must start and end with a "/".' %repoPath)
+    if '/' not in repoPath or not repoPath.startswith('/'):
+      print('  WARN: Path (%s) must be in a valid format and must start with a "/".' %repoPath)
       return False
 
+    if not repoPath.endswith('/'):
+      repoPath = repoPath+'/'
     self.repoPath = repoPath
 
   #---------------------------------------
@@ -83,12 +85,15 @@ class repo:
       print('  WARN: Mount point (%s) must be in a valid format and start with a "/".' %mntPoint)
       return False
     
+    if mntPoint.endswith("/"):
+      mntPoint = mntPoint[:-1]
+
     if not os.path.isdir(mntPoint):
       try:
         os.makedirs(mntPoint)
         self.newMnt = True
       except:
-        print('  WARN: Fail to create mount point (%s). proceed with %s.' %[mntPoint, self.stdMntPoint] )
+        print('  ERROR: Fail to create mount point (%s).' %mntPoint )
         return False
 
     if os.path.ismount(mntPoint):
@@ -103,25 +108,76 @@ class repo:
     self.mntPoint = mntPoint
 
   #---------------------------------------
+  def mount_iso(self):
+    if self.isoPath == None or self.mntPoint == None: 
+      return False
 
+    spObj = subprocess.Popen(
+      "mount -t iso9660 -o loop "+self.isoPath+" "+self.mntPoint, 
+      shell=True, 
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE
+    )
+    spStdOut = spObj.stdout.read()
+    spStdErr = spObj.stderr.read()
+    # print('STDOUT: ',spStdOut)
+    # print('STDERR: ',spStdErr)
+
+    if "mounted read-only" not in spStdErr and len(spStdErr) > 0:
+      print('  ERROR: Unable to mount DVD (%s).' %self.isoPath )
+      return False 
+    
+    #finalRepoPath = os.path.join(self.mntPoint, self.repoPath ) # Geht in python2 net richtig :(
+    finalRepoPath = self.mntPoint + self.repoPath 
+    finalRepoPath = finalRepoPath.replace("//", "/")
+    try:
+      dirAry = os.listdir(finalRepoPath)
+    except:
+      print('  ERROR: Repo path (%s) does not exist.' %finalRepoPath )
+      return False
+    
+    if "repodata" not in dirAry:
+      print('  ERROR: There is no RPM Repo in path (%s).' %finalRepoPath )
+      return False
+
+    self.mntOk = True
+
+  #---------------------------------------
+  def umount_iso(self):
+
+    if not self.mntOk or self.mntPoint == None or not os.path.ismount(str(self.mntPoint)):
+      print('  WARN: No DVD mounted. nothing todo.' )
+      return 
+    
+    spObj = subprocess.Popen(
+      "umount "+self.mntPoint+" -f ",
+      shell=True, 
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE
+    )
+    spStdOut = spObj.stdout.read()
+    spStdErr = spObj.stderr.read()
+    
+    if len(spStdErr) > 0:
+      print('  WARN: Something went wrong while umount %s.' %self.mntPoint )
+      return False
+    else:
+      return True
 
   #---------------------------------------
   def chk_config_ready(self):
 
-    if not os.path.isfile(self.isoPath): return False
+    if self.isoPath == None: return False
     if self.mntPoint == None: return False
-    
-    self.repoReady = True
-
+    if not self.mntOk: return False
     #Spache for more checks ;)
-    
 
+    self.repoReady = True
 
   #---------------------------------------
 
 
-  def mount_iso(self):
-    print('bla')
+  
 
 #-App Runner------------------------------------------------------------------
 if __name__ == '__main__':
@@ -134,9 +190,10 @@ if __name__ == '__main__':
   if args.repo_path:
     myRepo.set_repo_path(args.repo_path) 
     
-
+  myRepo.mount_iso()
   myRepo.chk_config_ready()
   myRepo.print_obj_config()
+  myRepo.umount_iso()
 
 #-----------------------------------------------------------------------------
 
