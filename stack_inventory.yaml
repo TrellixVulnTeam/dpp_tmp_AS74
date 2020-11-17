@@ -22,6 +22,7 @@ all:
     #docker_ucp_pwd: CHANGEME
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
+    local_nameservers : [ '10.186.112.131', '10.186.16.35', '10.186.106.46' ]
     swarm_init: mgmt1 # Achtung is doppelt
     swarm_port: "2377"
     hostlist:

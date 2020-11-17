@@ -1,0 +1,4 @@
+
+{% for nsrv in local_nameservers %}
+nameserver {{nsrv}}
+{% endfor %}

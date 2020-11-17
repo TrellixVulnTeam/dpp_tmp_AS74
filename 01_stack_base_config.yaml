@@ -61,9 +61,6 @@
     - name: Set Timezone
       command: timedatectl set-timezone Europe/Berlin
 
-    #- name: upgrade all packages
-    #  yum: name=* state=latest
-
     - name: Set local hostnames
       hostname:
         name: "{{inventory_hostname}}"
@@ -72,6 +69,11 @@
       template:
         src: ./conf_templates/hosts.template
         dest: /etc/hosts
+
+    # - name: Create resolv.conf file from J2 Template
+    #   template:
+    #     src: ./conf_templates/resolv.template
+    #     dest: /etc/resolv.conf
 
     - name: Disallow ssh password authentication
       lineinfile: dest=/etc/ssh/sshd_config

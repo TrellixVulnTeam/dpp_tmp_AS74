@@ -95,12 +95,34 @@ class helpers:
     
     if len(spStdErr) > 0: return False
     else: return True
+  
 
-  #---------------------------------------
+#-----------------------------------------------------------------------------
+
+
+#-Hammer-Cli lass-------------------------------------------------------------
+class hammer:
+
+  admPwd = None
+  repoUrl = None
+  satOrg = None
+  satProd = None
+  satRepo = None
+
+  #-Initializer-----------------------------------
+  def __init__(self, repoUrl, satOrg, satProd, satRepo):
+    inf = '( Using Hammer ;)'
+    self.repoUrl = repoUrl
+    self.satOrg = satOrg
+    self.satProd = satProd
+    self.satRepo = satRepo
+    
+
+  #-Main methods-----------------------------------
   def chk_hammer(self):
     spObj = subprocess.Popen(
-      "hammer --help", 
-      #"curl --help", 
+      #"hammer --help", 
+      "curl --help", 
       shell=True, 
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE
@@ -109,7 +131,99 @@ class helpers:
     if len(spRes) > 0: return False
     else: return True  
 
-#-----------------------------------------------------------------------------
+  #---------------------------------------
+  def set_adm_pwd(self, pwd):
+    if type(pwd) is not str or pwd == '':
+      print('ERROR: Please use string input')
+      return False
+    else:
+      self.admPwd = pwd
+      return True
+
+  #---------------------------------------
+  def ask_for_pwd(self):
+    pwdIn = getpass("Please enter Satellite admin password: ")
+    res = self.set_adm_pwd(pwdIn)
+    return res
+
+  #---------------------------------------
+  def create_product(self ):
+    if self.admPwd == None:
+      print('ERROR: Please set admin password first')
+      return False
+
+    productObj = {
+      "--name": self.satProd,
+      "--description": self.satProd,
+      "--organization": self.satOrg
+    }
+
+    hammerCmd = 'hammer --password '+self.admPwd+' product create'
+    for key, val in productObj.items():
+      hammerCmd += ' ' + key + ' "' + val + '"' 
+    print(hammerCmd)
+    
+    spObj = subprocess.Popen( hammerCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    spStdOut = spObj.stdout.read()
+    spStdErr = spObj.stderr.read()
+    print('  Status: ')
+    print("  - "+spStdOut + spStdErr)
+
+    # if len(spStdErr) > 0
+    #   return False
+
+  #---------------------------------------
+  def create_repository(self ):
+    if self.admPwd == None:
+      print('ERROR: Please set admin password first')
+      return False
+
+    repoObj = {
+      "--name": self.satRepo,
+      "--content-type": "yum",
+      "--publish-via-http": "true",
+      "--url": self.repoUrl,
+      "--product": self.satProd,
+      "--organization": self.satOrg,
+      "--verify-ssl-on-sync": "false",
+      " --mirror-on-sync": "false"
+    }
+
+    hammerCmd = 'hammer --password '+self.admPwd+' repository create'
+    for key, val in repoObj.items():
+      hammerCmd += ' ' + key + ' "' + val + '"' 
+    print(hammerCmd)
+    
+    spObj = subprocess.Popen( hammerCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    spStdOut = spObj.stdout.read()
+    spStdErr = spObj.stderr.read()
+    print('  Status: ')
+    print("  - "+spStdOut + spStdErr)
+
+  #---------------------------------------
+  def sync_repository(self ):
+    if self.admPwd == None:
+      print('ERROR: Please set admin password first')
+      return False
+
+    syncObj = {
+      "--name": self.satRepo,
+      "--product": self.satProd,
+      "--organization": self.satOrg
+    }
+
+    hammerCmd = 'hammer --password '+self.admPwd+' repository synchronize'
+    for key, val in syncObj.items():
+      hammerCmd += ' ' + key + ' "' + val + '"' 
+    print(hammerCmd)
+    
+    spObj = subprocess.Popen( hammerCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    spStdOut = spObj.stdout.read()
+    spStdErr = spObj.stderr.read()
+    print('  Status: ')
+    print("  - "+spStdOut + spStdErr)
+
+  #---------------------------------------
 
 
 #-Main tool class-------------------------------------------------------------
@@ -171,7 +285,7 @@ class repo:
 
     self.isoPath = isoPath
     if self.satRepo == None:
-      self.satRepo = isoPath.split("/")[-1]
+      self.satRepo = isoPath.split("/")[-1] + '_' + self.repoPath.replace("/", "")
 
   #---------------------------------------
   def set_repo_path(self, repoPath):
@@ -291,7 +405,7 @@ class repo:
   
   #---------------------------
   def stop_http_serve(self):
-    time.sleep(3)
+    time.sleep(2)
     if self.curServer == None:
       print('  WARN: No http server running. nothing todo.' )
       return 
@@ -315,12 +429,16 @@ class repo:
     if not self.repoReady:
       return False
 
-    chkHammer = self.myHelpers.chk_hammer()
+    repoUrl = self.repoUrl+":"+str(self.httpPort)
+    myHammer = hammer(repoUrl, self.satOrg, self.satProd, self.satRepo)
+    
+    #-------------------
+    chkHammer = myHammer.chk_hammer()
     if not chkHammer:
       print('  WARN: Satellite Hammer-Cli not available on this system.' )
       usrAnswer = raw_input('  Continue serving repo data via http? (yes/no): ')
       if usrAnswer == "yes":
-        print("STOP: via CTL + c")
+        print("Stop via: CTL + c")
         try: 
           while True: 
             time.sleep(10)
@@ -329,68 +447,14 @@ class repo:
           return
       else:
         return
-    else:
-      admPwd = getpass('  Please provide Satellite admin password: ')
-
-    #-------------------------------
-    repoUrl = self.repoUrl+":"+str(self.httpPort)
-
-    productObj = {
-      "--name": self.satProd,
-      "--description": self.satProd,
-      "--organization": self.satOrg
-    }
-    repoObj = {
-      "--name": self.satRepo,
-      "--content-type": "yum",
-      "--publish-via-http": "true",
-      "--url": repoUrl,
-      "--product": self.satProd,
-      "--organization": self.satOrg
-    }
-    syncObj = {
-      "--name": self.satRepo,
-      "--product": self.satProd,
-      "--organization": self.satOrg
-    }
-
-    satCmd = 'hammer --password "'+admPwd+'" product create'
-    for key, val in productObj.items():
-      satCmd += ' ' + key + ' "' + val + '"' 
-    print(satCmd)
-    spObj = subprocess.Popen( satCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    spStdOut = spObj.stdout.read()
-    spStdErr = spObj.stderr.read()
-    print('  Status: ')
-    print("  - "+spStdOut + spStdErr)
-
-    satCmd = 'hammer --password "'+admPwd+'" repository create'
-    for key, val in repoObj.items():
-      if val == "true" or val == "false":
-        cusVal = val
-      else:
-        cusVal = '"'+val+'"'
-      satCmd += ' ' + key + ' ' + cusVal
-    print(satCmd)
-    spObj = subprocess.Popen( satCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    spStdOut = spObj.stdout.read()
-    spStdErr = spObj.stderr.read()
-    print("  - "+spStdOut + spStdErr)
-
-    satCmd = 'hammer --password "'+admPwd+'" repository synchronize'
-    for key, val in syncObj.items():
-      if val == "true" or val == "false":
-        cusVal = val
-      else:
-        cusVal = '"'+val+'"'
-      satCmd += ' ' + key + ' ' + cusVal
-    print(satCmd)
-    spObj = subprocess.Popen( satCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    spStdOut = spObj.stdout.read()
-    spStdErr = spObj.stderr.read()
-    print("  - "+spStdOut + spStdErr)
-
     
+    #-------------------
+    if not myHammer.ask_for_pwd():
+      return
+    
+    myHammer.create_product()
+    myHammer.create_repository()
+    myHammer.sync_repository()
   
 
 #-App Runner------------------------------------------------------------------
