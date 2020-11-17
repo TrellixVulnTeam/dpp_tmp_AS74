@@ -7,6 +7,8 @@
 #
 # !!! BaseOs Repo must be available (e.g. from installation dvd) !!!
 # Tutorial: https://access.redhat.com/solutions/1355683
+# 
+# !!! Set the right hostname on satellite host before installation !!! 
 #
 #########################################################################
 
