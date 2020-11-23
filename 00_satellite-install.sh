@@ -8,6 +8,8 @@
 # !!! BaseOs Repo must be available (e.g. from installation dvd) !!!
 # Tutorial: https://access.redhat.com/solutions/1355683
 # 
+# !!! A minimum ansible version 2.5 must be installed !!!  
+# 
 # !!! Set the right hostname on satellite host before installation !!! 
 #
 #########################################################################
