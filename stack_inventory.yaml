@@ -4,7 +4,7 @@ all:
     docker_ce_src: "./src/docker_ce"
     docker_ee_src: "/mnt/repos/docker_ee"
     docker_img_src: "/mnt/repos/docker_images"
-    stack_certs_src: "./src/certs"
+    stack_certs_src: "./certs"
     docker_ee_rpms: 
       - docker-ee-cli-19.03.8-3.el8.x86_64.rpm
       - containerd.io-1.3.3-3.el8.x86_64.rpm
@@ -23,9 +23,12 @@ all:
       - name: "mirantis/dtr:2.8.2"
         file: mirantis_dtr_282.tar 
     docker_ucp_srv_name: ucp
-    docker_ucp_usr: admin
-    docker_dtr_srv: dtr
+    #docker_ucp_usr: admin
     #docker_ucp_pwd: CHANGEME
+    docker_ucp_ca: "./certs/ca.pem"
+    docker_ucp_crt: "./certs/test.dpp.dev.crt"
+    docker_ucp_key: "./certs/test.dpp.dev.key"
+    docker_dtr_srv: dtr
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
     local_nameservers : [ '10.186.112.131', '10.186.16.35', '10.186.106.46' ]

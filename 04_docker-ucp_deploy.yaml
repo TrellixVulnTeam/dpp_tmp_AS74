@@ -3,17 +3,17 @@
 
 #---------------------------------------------------------------
 
-# - name: Copy and Import Docker Images 
-#   hosts: stack
-#   tasks:
-#     - name: "Copy docker image export (*.tar) to target hosts"
-#       copy:
-#         src: "{{docker_img_src}}/"
-#         dest: "{{upload_target}}/docker_images"
+- name: Copy and Import Docker Images 
+  hosts: stack
+  tasks:
+    - name: "Copy docker image export (*.tar) to target hosts"
+      copy:
+        src: "{{docker_img_src}}/"
+        dest: "{{upload_target}}/docker_images"
     
-#     - name: Import docker image from upladed src
-#       shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
-#       loop: "{{docker_stack_images}}"
+    - name: Import docker image from upladed src
+      shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
+      loop: "{{docker_stack_images}}"
 
 #-----------------------------------------
 
@@ -53,8 +53,15 @@
     - debug: "msg={{ucp_run_command}}"
     
     - copy:
-        src: "{{stack_certs_src}}/"
-        dest: "{{upload_target}}/certs/"
+        src: "{{docker_ucp_ca}}"
+        dest: "{{upload_target}}/certs/ca.pem"
+    - copy:
+        src: "{{docker_ucp_crt}}"
+        dest: "{{upload_target}}/certs/cert.pem"
+    - copy:
+        src: "{{docker_ucp_key}}"
+        dest: "{{upload_target}}/certs/key.pem"
+
     - shell: "docker volume create --name ucp-controller-server-certs"
     - shell: "docker load < {{upload_target}}/docker_images/alpine.tar"
     - shell: "docker run -itd -v ucp-controller-server-certs:/certs --name cert_dummy alpine /bin/sh"
