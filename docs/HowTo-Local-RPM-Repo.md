@@ -1,0 +1,106 @@
+## How to setup a local RPM/YUM Repo without internet connection on target server
+
+ **1. Get full BaseOS and AppStream repo data (PC with internet connection
+    and filezilla) e.g. from:**
+- ftp://ftp.belnet.be/mirror/ftp.centos.org/8.2.2004/BaseOS/x86_64
+- ftp://ftp.belnet.be/mirror/ftp.centos.org/8.2.2004/AppStream/x86_64
+  <br>
+
+**2. Copy all files to target server. Eg. via SCP...**
+Local folders could look like these:
+- /var/repo/centos8/baseos/...
+- /var/repo/centos8/appstream/...
+<br>  
+
+**3. Move and backup existing repo config files, eg. like this:**
+```console
+$ mkdir ~/repo_bu
+$ sudo mv /etc/yum.repo.d/*.repo ~/repo_bu/
+```
+<br>
+  
+**4. Create new, own repo config file for local repo.
+Exapmle ( /etc/yum.repos.d/local.repo ):**
+
+```console
+[centos8-baseos]
+name=CentOS8 - BaseOS
+baseurl=file:///var/repo/centos8/baseos/x86_64/os/
+enabled=1
+gpgcheck=0
+
+[centos8-appstream]
+name=CentOS8 - AppStream
+baseurl=file:///var/repo/centos8/appstream/x86_64/os/
+enabled=1
+gpgcheck=0
+```
+<br>
+  
+**5. Check functionallity:**
+```console
+ $ yum search httpd
+```
+<br>
+  
+  
+## How to initialize own RPM Repo:
+
+1. Copy your RPM package files to a local path (e.g. all docker rpms to /var/repos/docker_ee )
+2. install createrepo via yum: "sudo yum install -y createrepo"
+3. Initialize and index the new repo: "sudo createrepo /var/repos/docker_ee"
+<br>
+  
+
+## How to provide local RPM/YUM Repo via http serve (nginx) to other local machines
+
+**1. Install nginx on local repo server:**
+```console
+$ sudo yum install -y nginx
+```
+<br>
+  
+
+**2. Set Symlink to from repo file path to nginx www root and set/copy required Selinux rights**
+```console
+sudo ln -s /var/repo/ /usr/share/nginx/html/
+sudo chcon -R --reference=/usr/share/nginx/html/ /var/repo/
+```
+<br>
+  
+**3. Edit nginx configuration and add repo file path
+Add the following into in the server brackets in /etc/nginx/nginx.conf** 
+```console
+location /repo {
+	root /var/repo/;
+	autoindex on;
+}
+```
+<br>
+  
+
+**4. restart nginx and test functionallity**
+```console
+$ sudo systemctl restart nginx
+$ curl http://localhost/repo
+```
+<br>
+  
+
+**5. Create repo config file for repo "guests"
+Could look like this (/etc/yum.repos.d/local.repo):**
+
+```console
+[centos8-baseos]
+name=CentOS8 - BaseOS
+baseurl=http://REPOSERVERIP/repo/centos8/baseos/x86_64/os/
+enabled=1
+gpgcheck=0
+
+[centos8-appstream]
+name=CentOS8 - AppStream
+baseurl=http://REPOSERVERIP/repo/centos8/appstream/x86_64/os/
+enabled=1
+gpgcheck=0
+```
+<br>

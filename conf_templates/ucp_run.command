@@ -3,4 +3,5 @@ docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
   --host-address {{hostlist[inventory_hostname]['ip']}} \
   --admin-password {{ucp_pwd}} \
   --admin-username {{ucp_admin}} \
-  --force-minimums
+  --force-minimums \
+  --external-server-cert 

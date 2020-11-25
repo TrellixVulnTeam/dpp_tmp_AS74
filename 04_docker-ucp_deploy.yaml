@@ -1,39 +1,70 @@
 
-#Apply via: ansible-playbook -i ./stack_inventory.yaml --become docker-ucp_deploy.yaml
+#Apply via: ansible-playbook -i ./stack_inventory.yaml --become 04_docker-ucp_deploy.yaml
 
 #---------------------------------------------------------------
 
-- name: Copy and Import Docker Images 
-  hosts: stack
-  tasks:
-    - name: "Copy docker image export (*.tar) to target hosts"
-      copy:
-        src: "{{docker_img_src}}/"
-        dest: "{{upload_target}}/docker_images"
+# - name: Copy and Import Docker Images 
+#   hosts: stack
+#   tasks:
+#     - name: "Copy docker image export (*.tar) to target hosts"
+#       copy:
+#         src: "{{docker_img_src}}/"
+#         dest: "{{upload_target}}/docker_images"
     
-    - name: Import docker image from upladed src
-      shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
-      loop: "{{docker_ucp_images}}"
+#     - name: Import docker image from upladed src
+#       shell: "docker load < {{upload_target}}/docker_images/{{item['file']}}"
+#       loop: "{{docker_stack_images}}"
 
 #-----------------------------------------
+
+- name: Check if UCP is already deployed 
+  hosts: swarm_init
+  gather_facts: no
+  tasks:
+  - shell: "docker ps -a | grep ucp-manager"
+    register: ucp_chk_str
+    #ignore_errors: yes
+    #no_log: True
+    failed_when: "'error message' in ucp_chk_str.stderr"
+  - debug:
+      msg: "{{hostvars[swarm_init]['ucp_chk_str'].stdout | length}}"
+  - debug:
+      msg: 'UCP is already deployed on stack'
+    #when: "'ucp-manager' in hostvars[swarm_init]['ucp_chk_str'].stdout"
+    when: "hostvars[swarm_init]['ucp_chk_str'].stdout | length > 0"
 
 - name: Deploy Docker UCP on Stack 
   hosts: swarm_init
   vars_prompt:
-    - name: ucp_admin
-      prompt: "Enter UCP admin user name"
-      private: no
-      default: admin
-    - name: ucp_pwd
-      prompt: "Enter UCP admin password (complex)"
-      private: yes
+  - name: ucp_admin
+    prompt: "Enter UCP admin user name"
+    private: no
+    default: admin
+  - name: ucp_pwd
+    prompt: "Set UCP admin password (complex)"
+    private: yes
+    
   vars:
     ucp_run_command: "{{ lookup('template', './conf_templates/ucp_run.command') }}"
 
   tasks:
+    - meta: end_play
+      when: "hostvars[swarm_init]['ucp_chk_str'].stdout | length > 0"
     - debug: "msg={{ucp_run_command}}"
+    
+    - copy:
+        src: "{{stack_certs_src}}/"
+        dest: "{{upload_target}}/certs/"
+    - shell: "docker volume create --name ucp-controller-server-certs"
+    - shell: "docker load < {{upload_target}}/docker_images/alpine.tar"
+    - shell: "docker run -itd -v ucp-controller-server-certs:/certs --name cert_dummy alpine /bin/sh"
+    - shell: "docker cp {{upload_target}}/certs/. cert_dummy:/certs/"
+    - shell: "docker kill cert_dummy"
+    - shell: "docker rm cert_dummy"
+
     - name: "Initialite UCP Containers"
       shell: "{{ucp_run_command}}"
+      #when: "hostvars[swarm_init]['ucp_chk_str'].stdout | length > 0"
       #register: result
     
 #---------------------------------------------------------------

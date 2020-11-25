@@ -42,6 +42,14 @@
         shell: "docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --name {{docker_ucp_srv_name}} docker/ucp:3.3.0 uninstall-ucp --id {{cluster_id.stdout}} "
         when: "ucp_reset == 'yes' and inventory_hostname == swarm_init"
 
+      - name: "Remove Docker UCP volumens"
+        shell: "docker volume rm $(docker volume ls -q | grep ucp)"
+        register: ucp_chk_str
+        ignore_errors: yes
+        no_log: True
+        failed_when: "'error message' in ucp_chk_str.stderr"
+        when: "ucp_reset == 'yes' and inventory_hostname == swarm_init"
+
       - name: "Destroy swarm config "
         shell: docker swarm leave --force
         when: "'inactive' not in result.stdout and swarm_reset == 'yes'"

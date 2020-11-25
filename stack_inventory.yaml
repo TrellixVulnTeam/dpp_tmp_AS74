@@ -4,26 +4,33 @@ all:
     docker_ce_src: "./src/docker_ce"
     docker_ee_src: "/mnt/repos/docker_ee"
     docker_img_src: "/mnt/repos/docker_images"
+    stack_certs_src: "./src/certs"
     docker_ee_rpms: 
-      - docker-ee-cli-19.03.5-3.el8.x86_64.rpm
-      - containerd.io-1.2.10-3.2.el8.x86_64.rpm
-      - docker-ee-19.03.5-3.el8.x86_64.rpm
+      - docker-ee-cli-19.03.8-3.el8.x86_64.rpm
+      - containerd.io-1.3.3-3.el8.x86_64.rpm
+      - docker-ee-19.03.8-3.el8.x86_64.rpm
     docker_ee_pkgs: 
       - docker-ee-cli
       - docker-ee
       - containerd.io
-    docker_ucp_images:
+    docker_stack_images:
       - name: "nginx:latest"
         file: container_nginx.tar 
+      - name: "alpine"
+        file: alpine.tar 
       - name: "docker/ucp:3.3.0"
         file: ucp_images_3.3.0.tar.gz 
+      - name: "mirantis/dtr:2.8.2"
+        file: mirantis_dtr_282.tar 
     docker_ucp_srv_name: ucp
     docker_ucp_usr: admin
+    docker_dtr_srv: dtr
     #docker_ucp_pwd: CHANGEME
     upload_target: "/tmp/inject"
     dev_domain: "dpp.dev"
     local_nameservers : [ '10.186.112.131', '10.186.16.35', '10.186.106.46' ]
     swarm_init: mgmt1 # Achtung is doppelt
+    swarm_main_url: mgmt1.dpp.dev
     swarm_port: "2377"
     hostlist:
       controller:

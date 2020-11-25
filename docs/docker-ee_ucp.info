@@ -36,3 +36,18 @@ docker volume rm $(docker volume ls -f name=ucp -q)
 Hard Fallback: 
 docker kill $(docker ps -aq)
 docker rm $(docker ps -aq)
+
+
+
+When installing UCP you can customize:
+
+  * The certificates used by the UCP web server. Create a volume
+    named 'ucp-controller-server-certs' and copy the ca.pem, cert.pem, and key.pem
+    files to the root directory. Then run the install command with the
+    '--external-server-cert' flag.
+
+  docker volume create --name ucp-controller-server-certs
+  docker run -itd -v ucp-controller-server-certs:/certs --name cert_dummy alpine /bin/sh
+  docker cp ./certs/. cert_dummy:/certs/
+  docker kill cert_dummy
+  docker rm cert_dummy
