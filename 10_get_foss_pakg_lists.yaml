@@ -1,0 +1,23 @@
+#Apply via: ansible-playbook -i ./00_setup-hosts_inventory.yaml --become 10_get_foss_pakg_lists.yaml
+# Optional --ask-become-pass
+
+#---------------------------------------------------------------
+- name: "Export installed Yum packages to csv"
+  gather_facts: yes
+  hosts: all
+  vars:
+  
+  tasks:
+  - name: "Copy and Run Python Script to target host and store result csv s "
+    block:
+      - copy:
+          src: "./scripts/pkgs_for_foss.py"
+          dest: "/tmp/pkgs_for_foss.py"
+          mode: '0744'
+      - shell: "/tmp/pkgs_for_foss.py"
+        args:
+          chdir: /tmp/
+      - fetch:
+          src: /tmp/installed_yum_packages.csv
+          dest: /tmp/installed_yum_packages_{{ inventory_hostname }}.csv
+          flat: yes
